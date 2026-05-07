@@ -1,11 +1,12 @@
 ---
-name: Bug Report 🐞
+name: "Bug Report \U0001F41E"
 about: I want to report a bug that I am facing.
 title: ''
-type: 'Bug'
-labels: ['to triage']
+labels: ''
+assignees: ''
 
 ---
+
 ## Describe the bug
 
 A clear and concise description of what the bug is.
