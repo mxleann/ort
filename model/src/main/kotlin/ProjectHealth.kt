@@ -6,16 +6,15 @@ enum class Criticality {
 
 
 data class ProjectHealth (
-        /**
-       * The name of project health metric.
-       */
-      val name: String? = null,
+    /**
+     * The name of project health metric.
+     */
+    val name: String? = null,
 
-
-      /**
-       * The metric score.
-       */
-    val value: Double? = null,
+    /**
+     * The metric score.
+     */
+    val score: Double? = null,
 
     /**
      * The metric crititcality.
