@@ -45,6 +45,7 @@ import org.ossreviewtoolkit.model.FileFormat
 import org.ossreviewtoolkit.model.utils.DefaultResolutionProvider
 import org.ossreviewtoolkit.model.utils.mergeLabels
 import org.ossreviewtoolkit.plugins.advisors.api.AdviceProviderFactory
+import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProviderFactory
 import org.ossreviewtoolkit.plugins.api.OrtPlugin
 import org.ossreviewtoolkit.plugins.api.PluginDescriptor
 import org.ossreviewtoolkit.plugins.commands.api.OrtCommand
@@ -112,6 +113,14 @@ class AdviseCommand(descriptor: PluginDescriptor = AdviseCommandFactory.descript
             ?: throw BadParameterValue("Advisor '$name' is not one of ${AdviceProviderFactory.ALL.keys}.")
     }.split(",").required()
 
+    private val projectHealthProviderFactories by option(
+        "--project-health", "-p",
+        help = "The comma-separated project health analyzers to use, ane of ${ProjectHealthProviderFactory.ALL.keys}."
+    ).convert { name ->
+        ProjectHealthProviderFactory.ALL[name]
+            ?: throw BadParameterValue("Project health analyzer '$name' is not one of ${ProjectHealthProviderFactory.ALL.keys}.")
+    }.split(",").required()
+
     private val skipExcluded by option(
         "--skip-excluded",
         help = "Do not check excluded projects or packages."
@@ -128,7 +137,11 @@ class AdviseCommand(descriptor: PluginDescriptor = AdviseCommandFactory.descript
         echo("The following ${distinctProviders.size} advisor(s) are enabled:")
         echo("\t" + distinctProviders.joinToString { it.descriptor.id }.ifEmpty { "<None>" })
 
-        val advisor = Advisor(distinctProviders, ortConfig.advisor)
+        val distinctProjectHealthProviders = projectHealthProviderFactories.distinct()
+        echo("The following ${distinctProjectHealthProviders.size} project health advisor(s) are enabled:")
+        echo("\t" + distinctProjectHealthProviders.joinToString { it.descriptor.id }.ifEmpty { "<None>" })
+
+        val advisor = Advisor(distinctProviders,distinctProjectHealthProviders,ortConfig.advisor)
 
         val ortResultInput = readOrtResult(ortFile)
 
