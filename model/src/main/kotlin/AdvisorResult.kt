@@ -43,5 +43,10 @@ data class AdvisorResult(
      * The vulnerabilities.
      */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    val vulnerabilities: List<Vulnerability> = emptyList()
+    val vulnerabilities: List<Vulnerability> = emptyList(),
+
+    /**
+     * Project health metrics.
+     */
+    val projectHealth: List<ProjectHealth> = emptyList(),
 )
