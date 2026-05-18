@@ -36,6 +36,7 @@ import org.ossreviewtoolkit.model.Package
 import org.ossreviewtoolkit.model.config.AdvisorConfiguration
 import org.ossreviewtoolkit.plugins.advisors.api.AdviceProvider
 import org.ossreviewtoolkit.plugins.advisors.api.AdviceProviderFactory
+import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProviderFactory
 import org.ossreviewtoolkit.plugins.advisors.api.normalizeVulnerabilityData
 import org.ossreviewtoolkit.plugins.api.orEmpty
 import org.ossreviewtoolkit.utils.common.collectMessages
@@ -47,6 +48,7 @@ import org.ossreviewtoolkit.utils.ort.Environment
  */
 class Advisor(
     private val providerFactories: List<AdviceProviderFactory>,
+    private val projectHealthProviderFactories: List<ProjectHealthProviderFactory>,
     private val config: AdvisorConfiguration
 ) {
     /**
