@@ -27,6 +27,7 @@ import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
 import org.ossreviewtoolkit.clients.scorecard.ScorecardResult
 import org.ossreviewtoolkit.clients.scorecard.client.getResult
 
@@ -69,6 +70,18 @@ class Scorecard (
         engine {
             preconfigured = okHttpClient
         }
+
+        install(DefaultRequest) {
+            url(config.apiUrl)
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+        }
+
+        install(ContentNegotiation) {
+            json(Json {
+                ignoreUnknownKeys = true
+                coerceInputValues = true
+            })
+        }
     }
 
     override val details = AdvisorDetails(descriptor.id)
@@ -76,39 +89,45 @@ class Scorecard (
 
     override suspend fun retrievePackageFindings(packages: Set<Package>): Map<Package, AdvisorResult> {
         val startTime = Instant.now()
-        val healthData = mutableListOf<ProjectHealth>()
         val issues = mutableListOf<Issue>()
-        val regex = """/^https:\/\/((?:(?:\w+)|-)+(?:.\w+)+)\/((?:\w|-)+)\/((?:\w|-)+)$/gm""".toRegex()
+        val regex = """^https:\/\/((?:(?:\w+)|-)+(?:\.\w+)+)\/((?:\w|-)+)\/(?:((?:\w+)|-)+(?:\.\w+)+)$""".toRegex()
 
-        // filter only homepage urls that lead to the repo
-        val urls = packages
-            .filter { it.homepageUrl.isNotEmpty() && it.homepageUrl.matches(regex) }
-            .associateWithTo(
-                mutableMapOf(),)
-                {regex.find(it.homepageUrl.substringBefore("#"))!!.groupValues.drop(1)}
-        val responses = urls.mapValues { (pkg, repoData) ->
-            val (platform, org, repo) = (repoData)
-            client.getResult(platform, org, repo) ?: throw IOException("The API endpoint was not found.")}
+        val nonEmptyUrls = packages
+            .filter {
+                it.vcsProcessed.url.isNotEmpty()}
+        val validUrls = packages
+            .filter {
+                it.vcsProcessed.url.matches(regex)}
+            .associateWithTo(mutableMapOf()) { pkg ->
+                regex.find(pkg.vcsProcessed.url)
+            }
 
-        // Heath metrics mapped to packages
-        val healthList: List<Pair<Package, List<ProjectHealth>>> = responses.map { (pkg, scorecardResult) ->
+        val responses = validUrls.mapValues { (pkg, repoData) ->
+            val (platform, org, repo) = repoData!!.destructured
+            client.getResult(platform, org, repo) ?: throw IOException("The VCS URL ${pkg.vcsProcessed.url} could not be used to fetch from the endpoint.")}
 
-            val packageHealthData: List<ScorecardResult> = responses.filter { it.key == pkg }.values.toList()
-            val healthData: List<ProjectHealth> = packageHealthData.toProjectHealthList()
+        val invalidUrls = nonEmptyUrls.filterNot { it in validUrls.keys }
 
-            Pair(pkg, healthData)
-        }
-
-        urls.mapTo(issues) { (purl, _) ->
+        invalidUrls.mapTo(issues) { pkg ->
             Issue(
                 source = descriptor.displayName,
-                message = "The PURL '$purl' could not be mapped to a component."
+                message = "The VCS URL '${pkg.vcsProcessed.url}' could not be mapped to a repository."
             )
+        }
+
+
+        val projectHealthList: List<Pair<Package, List<ProjectHealth>>> = responses.map { (pkg, scorecardResult) ->
+
+            val healthData = listOf(scorecardResult).toProjectHealthList()
+
+            pkg to healthData
+        }+ invalidUrls.map { pkg ->
+            pkg to emptyList()
         }
 
         val endTime = Instant.now()
 
-        return healthList.associate { (pkg, healthData) ->
+        return projectHealthList.associate { (pkg, healthData) ->
             pkg to AdvisorResult(details, AdvisorSummary(startTime, endTime, issues), emptyList(), healthData)
         }
     }
@@ -118,10 +137,8 @@ class Scorecard (
             result.checks.map { metric ->
                 ProjectHealth(
                     name = metric.name,
-                    score = metric.score?.toDouble(),
-                    //! TODO
-                    criticality = Criticality.Critical, // need like defined map or something to determine criticality
-                    ////
+                    value = metric.score?.toDouble(),
+                    criticality = metric.score?.let { determineValueCriticality(it) },
                     reason = metric.reason,
                     details = metric.details,
                     documentation = metric.documentation?.short,
@@ -129,6 +146,15 @@ class Scorecard (
                     source = descriptor.id
                 )
             }
+        }
+    }
+
+    fun determineValueCriticality (value: Int) : Criticality {
+        return when {
+            value < 3.0 -> Criticality.Critical
+            value < 5.0 -> Criticality.High
+            value < 8.0 -> Criticality.Medium
+            else -> Criticality.Low
         }
     }
 }
