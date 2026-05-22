@@ -15,7 +15,7 @@ data class ProjectHealth (
       /**
        * The metric score.
        */
-    val score: Double? = null,
+    val value: Double? = null,
 
     /**
      * The metric crititcality.
