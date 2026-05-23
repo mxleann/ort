@@ -132,16 +132,44 @@ class CrossdTest : StringSpec({
         issue.message shouldBe "The VCS URL 'https://invalid-url' could not be mapped to a repository."
     }
 
-    /*
-    "determineValueCriticality should return the correct criticality" {
-        crossd.determineValueCriticality(1) shouldBe Criticality.Critical
-        crossd.determineValueCriticality(2) shouldBe Criticality.Critical
-        crossd.determineValueCriticality(3) shouldBe Criticality.High
-        crossd.determineValueCriticality(4) shouldBe Criticality.High
-        crossd.determineValueCriticality(5) shouldBe Criticality.Medium
-        crossd.determineValueCriticality(7) shouldBe Criticality.Medium
-        crossd.determineValueCriticality(8) shouldBe Criticality.Low
-        crossd.determineValueCriticality(10) shouldBe Criticality.Low
+    "higherIsBetterMetric should return the correct criticality" {
+        val metric = CrossdMetric(
+            name = "test",
+            displayName = "Test Metric",
+            descriptionShort = "This metric is nice.",
+            documentationUrl = "https://example.org/documentation#test",
+            higherIsBetter = true,
+            averageValue = 10.0
+        )
+        metric.getCriticality(-100.0, 10.0) shouldBe Criticality.High
+        metric.getCriticality(0.0, 10.0) shouldBe Criticality.High
+        metric.getCriticality(7.0, 10.0) shouldBe Criticality.High
+        metric.getCriticality(7.5, 10.0) shouldBe Criticality.Medium
+        metric.getCriticality(8.5, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(9.9, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(10.0, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(100.0, 10.0) shouldBe Criticality.Low
     }
-    */
+
+    "lowerIsBetterMetric should return the correct criticality" {
+        val metric = CrossdMetric(
+            name = "test",
+            displayName = "Test Metric",
+            descriptionShort = "This metric is nice.",
+            documentationUrl = "https://example.org/documentation#test",
+            higherIsBetter = false,
+            averageValue = 10.0
+        )
+        metric.getCriticality(-100.0, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(0.0, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(7.0, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(7.5, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(8.5, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(9.9, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(10.0, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(11.5, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(12.0, 10.0) shouldBe Criticality.Medium
+        metric.getCriticality(12.5, 10.0) shouldBe Criticality.Medium
+        metric.getCriticality(100.0, 10.0) shouldBe Criticality.High
+    }
 })
