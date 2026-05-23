@@ -32,7 +32,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -108,11 +110,12 @@ class Crossd (
 
         val startTime = Instant.now()
         val issues = mutableListOf<Issue>()
-        val regex = """^[a-z]+://[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+/([a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+)(?:\.git)?$""".toRegex()
+        val regex =
+            """^[a-z]+://[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+/([a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+)(?:\.git)?$""".toRegex()
 
         // find project owner and name from git URL and report missing ones
         val packageIds = packages.associateWith { regex.find(it.vcsProcessed.url)?.groupValues[1] }
-        packageIds.filterValues{it == null}.mapTo(issues) { pkg ->
+        packageIds.filterValues { it == null }.mapTo(issues) { pkg ->
             Issue(
                 source = descriptor.displayName,
                 message = "The VCS URL '${pkg.key.vcsProcessed.url}' could not be mapped to a repository."
@@ -120,10 +123,14 @@ class Crossd (
         }
 
         // query the actual metrics data
-        val metrics = packageIds.mapValues {
-            it.value?.let { packageId ->
-                getMetrics(packageId)
-            } ?: emptyList()
+        val metrics = withContext(Dispatchers.IO.limitedParallelism(20)) {
+            packageIds.mapValues { entry ->
+                async {
+                    entry.value?.let { packageId ->
+                        getMetrics(packageId)
+                    } ?: emptyList()
+                }
+            }.mapValues { it.value.await() }
         }
 
         val endTime = Instant.now()
