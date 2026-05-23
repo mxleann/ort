@@ -1,0 +1,90 @@
+/*
+ * Copyright (C) 2026 The ORT Project Copyright Holders <https://github.com/oss-review-toolkit/ort/blob/main/NOTICE>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ * License-Filename: LICENSE
+ */
+
+package org.ossreviewtoolkit.plugins.advisors.crossd
+
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.jsonPrimitive
+import org.ossreviewtoolkit.model.Criticality
+
+data class CrossdMetric(
+
+    /**
+     * The name of the metric
+     */
+    val name: String,
+
+    /**
+     * The formatted name of the metric
+     */
+    val displayName: String,
+
+    /**
+     * A short description of the metric
+     */
+    val descriptionShort: String,
+
+    /**
+     * A link to the documentation of the metric
+     */
+    val documentationUrl: String,
+
+    /**
+     * Whether a higher value means that the value is better
+     */
+    val higherIsBetter: Boolean,
+
+    /**
+     * The average value as returned by [the CrOSSD API](https://fh-crossd.github.io/components/api/api.html#apimetricsavg) as of *2026-05-23*
+     * This is used only as a fallback if the newest values could not be fetched.
+     */
+    val averageValue: Double,
+
+    /**
+     * A function to get the value from the JSON object
+     * The default expects a double value in the 'metrics' object with key=name
+     * May be overridden for nested structures or different names
+     */
+    val valueGetter: (JsonObject) -> Double? = { it[name]?.jsonPrimitive?.double }
+) {
+
+    /**
+     * Calculate the criticality of the value
+     * It's based on the same evaluation method that CrOSSD uses:
+     * It calculates the difference to the average (in percent) and
+     * uses fixed thresholds for the ratings (% worse than avg):
+     * <= 15%  : green  (LOW)
+     * <= 25%  : yellow (MEDIUM)
+     * >  25%  : red    (HIGH)
+     *
+     * If value is higher than avg and *higherIsBetter* is set (and vice versa) then
+     * it always considered green (LOW)
+     */
+    fun getCriticality(value: Double, average: Double?): Criticality {
+        val avg = average ?: averageValue
+        val percentWorse = (1 - (value / avg)) * (if (higherIsBetter) 100 else -100)
+
+        return when {
+            percentWorse <= 15 -> Criticality.Low
+            percentWorse <= 25 -> Criticality.Medium
+            else -> Criticality.High
+        }
+    }
+}
