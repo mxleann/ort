@@ -28,24 +28,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 }
 
-/*kfx {
-    register<Swagger>("ScorecardApi") {
-        files.from("swagger/scorecard.swagger.json")
-
-        packageName = "org.ossreviewtoolkit.clients.crossd"
-
-        dependencies {
-            compiler(kotlinClasses())
-            compiler(kotlinxJson())
-            compiler(ktorClient())
-        }
-
-        usingKotlinSourceSet(kotlin.sourceSets.main)
-    }
-}*/
-
 dependencies {
-    //api(libs.okhttp)
     api(libs.kotlinx.serialization.core)
 
     api(ktorLibs.client.core)
