@@ -90,7 +90,7 @@ class Scorecard (
     override suspend fun retrievePackageFindings(packages: Set<Package>): Map<Package, AdvisorResult> {
         val startTime = Instant.now()
         val issues = mutableListOf<Issue>()
-        val regex = """^https:\/\/((?:(?:\w+)|-)+(?:\.\w+)+)\/((?:\w|-)+)\/(?:((?:\w+)|-)+(?:\.\w+)+)$""".toRegex()
+        val regex = """^[a-z]+://([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)/([a-zA-Z0-9-_]+)/([a-zA-Z0-9-_]+)(?:\.git)?$""".toRegex()
 
         val nonEmptyUrls = packages
             .filter {
