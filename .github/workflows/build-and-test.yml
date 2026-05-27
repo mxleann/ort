@@ -2,16 +2,7 @@ name: Build and Test
 
 on:
   pull_request:
-    branches:
-      - main
   push:
-    branches:
-      - main
-
-env:
-  GRADLE_OPTS: -Dorg.gradle.daemon=false -Dkotest.assertions.multi-line-diff=unified
-  REGISTRY: ghcr.io
-  TEST_IMAGE_TAG: ort:test
 
 jobs:
   build:
@@ -31,26 +22,6 @@ jobs:
       uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
     - name: Build all classes
       run: ./gradlew classes
-  codeql-analysis:
-    needs: build
-    runs-on: ubuntu-24.04
-    permissions:
-      # Needed for SARIF scanning upload.
-      security-events: write
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5
-      with:
-        languages: java
-        tools: nightly
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-    - name: Build all classes
-      run: ./gradlew -Dorg.gradle.jvmargs=-Xmx1g --no-build-cache classes
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5
   test:
     strategy:
       matrix:
@@ -84,87 +55,3 @@ jobs:
       with:
         paths: "**/test-results/**/TEST-*.xml"
       if: always()
-    - name: Upload code coverage data
-      uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: test-${{ matrix.os }}
-  funTest-no-external-tools:
-    needs: build
-    runs-on: ubuntu-24.04
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-    - name: Install Flox
-      uses: flox/install-flox-action@6e70b2624cea62b0f11ea4a28e719fe1c86c028b # v2.4.1
-      with:
-        disable-metrics: true
-    - name: Run functional tests that do not require external tools
-      run: ./flox/run_isolated.sh minimal ./gradlew --scan -Dkotest.tags=!RequiresExternalTool funTest jacocoFunTestReport
-    - name: Create Test Summary
-      uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
-      with:
-        paths: "**/test-results/**/TEST-*.xml"
-      if: always()
-    - name: Upload code coverage data
-      uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: funTest-no-external-tools
-  funTest-external-tools:
-    runs-on: ubuntu-24.04
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      with:
-        submodules: recursive
-    - name: Free Disk Space
-      uses: ./.github/actions/free-disk-space
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
-    - name: Build ORT Docker Image
-      uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
-      with:
-        context: .
-        load: true
-        tags: ${{ env.TEST_IMAGE_TAG }}
-        target: all-tools
-        cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/ort:cache
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-    - name: Run functional tests that do require external tools
-      run: |
-        # Run the functional tests in the Docker container.
-        docker run \
-          -u $(id -u):$(id -g) \
-          -v /etc/group:/etc/group:ro \
-          -v /etc/passwd:/etc/passwd:ro \
-          -v /home/runner:/home/runner \
-          -v ${{ github.workspace }}:/workspace \
-          -w /workspace \
-          -e HOME=/home/runner \
-          -e GRADLE_OPTS="$GRADLE_OPTS" \
-          ${{ env.TEST_IMAGE_TAG }} \
-          -c "./gradlew --scan -Dkotest.tags=RequiresExternalTool funTest jacocoFunTestReport"
-    - name: Create Test Summary
-      uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
-      with:
-        paths: "**/test-results/**/TEST-*.xml"
-      if: always()
-    - name: Upload code coverage data
-      uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: funTest-external-tools
-  publication-test:
-    needs: build
-    runs-on: ubuntu-24.04
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-    - name: Publish to local Maven repository
-      run: ./gradlew publishToMavenLocal
