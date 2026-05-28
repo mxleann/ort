@@ -50,7 +50,7 @@ val CROSSD_METRICS: Array<CrossdMetric> = arrayOf(
         displayName = "Criticality Score",
         descriptionShort = "The project presenting this metric is maintained by member of the Securing Critical Projects WG4 and aims to detect critical projects, the open-source community depends on.",
         documentationUrl = "https://health.crossd.tech/doc#criticality-score",
-        higherIsBetter = true, // not sure about this
+        higherIsBetter = true,
         averageValue = 40.42
     ),
     CrossdMetric(
