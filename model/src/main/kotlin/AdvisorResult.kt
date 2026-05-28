@@ -48,5 +48,6 @@ data class AdvisorResult(
     /**
      * Project health metrics.
      */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     val projectHealth: List<ProjectHealth> = emptyList(),
 )
