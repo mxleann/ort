@@ -24,9 +24,13 @@ import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
+
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.ossreviewtoolkit.clients.scorecard.ScorecardResult
 import org.ossreviewtoolkit.clients.scorecard.client.getResult
@@ -43,11 +47,8 @@ import org.ossreviewtoolkit.plugins.advisors.api.AdviceProviderFactory
 import org.ossreviewtoolkit.plugins.api.OrtPlugin
 import org.ossreviewtoolkit.plugins.api.PluginDescriptor
 import org.ossreviewtoolkit.utils.ort.okHttpClient
-import java.io.IOException
+import org.apache.logging.log4j.kotlin.logger
 import java.time.Instant
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.emptyMap
 
 
 /**
@@ -95,18 +96,37 @@ class Scorecard (
         val nonEmptyUrls = packages
             .filter {
                 it.vcsProcessed.url.isNotEmpty()}
-        val validUrls = packages
+        val validUrls = nonEmptyUrls
             .filter {
                 it.vcsProcessed.url.matches(regex)}
             .associateWithTo(mutableMapOf()) { pkg ->
                 regex.find(pkg.vcsProcessed.url)
             }
 
-        val responses = validUrls.mapValues { (pkg, repoData) ->
-            val (platform, org, repo) = repoData!!.destructured
-            client.getResult(platform, org, repo) ?: throw IOException("The VCS URL ${pkg.vcsProcessed.url} could not be used to fetch from the endpoint.")}
+        val responses = withContext(Dispatchers.IO.limitedParallelism(20)) {
+            validUrls.mapValues { (pkg, repoData) ->
+                async {
+                    val (platform, org, repo) = repoData!!.destructured
+                    client.getResult(platform, org, repo) ?: run {
+                        logger.warn { "The VCS URL ${pkg.vcsProcessed.url} could not be found in the scorecard database." }
+                        null
+                    }
+                }
+            }
+        }.mapValues { it.value.await() }
 
-        val invalidUrls = nonEmptyUrls.filterNot { it in validUrls.keys }
+        // Packages that did not lead to a valid response from scorecard
+        val reposNotFound = responses.filterValues { it == null }.keys
+
+        reposNotFound.mapTo(issues) { pkg ->
+            Issue(
+                source = descriptor.displayName,
+                message = "The VCS URL '${pkg.vcsProcessed.url}' could not be found in the scorecard database."
+            )
+        }
+
+        // Packages that have an invalid url
+        val invalidUrls = packages.filterNot { it in validUrls.keys }
 
         invalidUrls.mapTo(issues) { pkg ->
             Issue(
@@ -115,15 +135,21 @@ class Scorecard (
             )
         }
 
+        // Packages with valid responses from scorecard merged with Packages with issues
+        val projectHealthList: List<Pair<Package, List<ProjectHealth>>> = (responses
+            .mapNotNull { (pkg, scorecardResult) ->
 
-        val projectHealthList: List<Pair<Package, List<ProjectHealth>>> = responses.map { (pkg, scorecardResult) ->
+                scorecardResult?.let {
+                    val healthData = listOf(it).toProjectHealthList()
+                    pkg to healthData
+                }
 
-            val healthData = listOf(scorecardResult).toProjectHealthList()
-
-            pkg to healthData
-        }+ invalidUrls.map { pkg ->
+            }+ invalidUrls.map { pkg ->
             pkg to emptyList()
-        }
+            }+ reposNotFound.map { pkg ->
+                pkg to emptyList()
+            }
+        )
 
         val endTime = Instant.now()
 
@@ -135,18 +161,21 @@ class Scorecard (
     fun List<ScorecardResult>.toProjectHealthList(): List<ProjectHealth> {
         return this.flatMap { result ->
             result.checks.map { metric ->
+                // metrics without name or score are useless and should not be included in the list
+                if (metric.name != null || metric.score != null) {
                 ProjectHealth(
-                    name = metric.name,
-                    value = metric.score?.toDouble(),
+                    name = metric.name ?: "",
+                    value = metric.score?.toDouble() ?: -1.0,
                     criticality = metric.score?.let { determineValueCriticality(it) },
                     reason = metric.reason,
                     details = metric.details,
                     documentation = metric.documentation?.short,
                     documentationLink = metric.documentation?.url,
                     source = descriptor.id
-                )
+                    )
+                } else { null }
             }
-        }
+        }.filterNotNull()
     }
 
     fun determineValueCriticality (value: Int) : Criticality {
