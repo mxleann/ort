@@ -101,9 +101,6 @@ class Crossd (
 
     override val details = AdvisorDetails(descriptor.id)
 
-    var averages: Map<String, Double> = emptyMap()
-
-
     override suspend fun retrievePackageFindings(packages: Set<Package>): Map<Package, AdvisorResult> {
         // update average values that are used for the value ratings
         updateAverageValues()
@@ -145,11 +142,12 @@ class Crossd (
         if (!response.status.isSuccess())
             return
 
-        val avg = (response.body() as JsonObject)["avg"]?.jsonObject
+        val averages = (response.body() as JsonObject)["avg"]?.jsonObject
             ?: return
 
-        averages = avg.entries.associate { (key, value) ->
-            key to value.jsonPrimitive.double
+        CROSSD_METRICS.forEach { metric ->
+            val average = averages[metric.name]?.jsonPrimitive?.double
+            average.let { metric.averageValue = average!! }
         }
     }
 
@@ -190,7 +188,7 @@ class Crossd (
                 listOf(ProjectHealth(
                     name = metric.name,
                     value = value,
-                    criticality = metric.getCriticality(value, averages[metric.name]),
+                    criticality = metric.getCriticality(value),
                     documentation = metric.descriptionShort,
                     documentationLink = metric.documentationUrl,
                     details = emptyList(),

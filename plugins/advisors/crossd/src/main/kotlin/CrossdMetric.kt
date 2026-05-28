@@ -56,7 +56,7 @@ data class CrossdMetric(
      * The average value as returned by [the CrOSSD API](https://fh-crossd.github.io/components/api/api.html#apimetricsavg) as of *2026-05-23*
      * This is used only as a fallback if the newest values could not be fetched.
      */
-    val averageValue: Double,
+    var averageValue: Double,
 
     /**
      * A function to get the value from the JSON object
@@ -68,8 +68,7 @@ data class CrossdMetric(
 
     /**
      * Calculate the criticality of the value
-     * It's based on the same evaluation method that CrOSSD use
-s:
+     * It's based on the same evaluation method that CrOSSD uses:
      * It calculates the difference to the average (in percent) and
      * uses fixed thresholds for the ratings (% worse than avg):
      * <= 15%  : green  (LOW)
@@ -81,9 +80,8 @@ s:
      *
      * The values are multiplied by 100 to circumvent floating point errors, especially for the unit tests.
      */
-    fun getCriticality(value: Double, average: Double?): Criticality {
-        val avg = average ?: averageValue
-        val percentWorse = round((1 - (value / avg)) * (if (higherIsBetter) 10000 else -10000))
+    fun getCriticality(value: Double): Criticality {
+        val percentWorse = round((1 - (value / averageValue)) * (if (higherIsBetter) 10000 else -10000))
 
         return when {
             percentWorse <= 1500 -> Criticality.Low
