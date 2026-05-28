@@ -141,14 +141,14 @@ class CrossdTest : StringSpec({
             higherIsBetter = true,
             averageValue = 10.0
         )
-        metric.getCriticality(-100.0, 10.0) shouldBe Criticality.High
-        metric.getCriticality(0.0, 10.0) shouldBe Criticality.High
-        metric.getCriticality(7.0, 10.0) shouldBe Criticality.High
-        metric.getCriticality(7.5, 10.0) shouldBe Criticality.Medium
-        metric.getCriticality(8.5, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(9.9, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(10.0, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(100.0, 10.0) shouldBe Criticality.Low
+        metric.getCriticality(-100.0) shouldBe Criticality.High
+        metric.getCriticality(0.0) shouldBe Criticality.High
+        metric.getCriticality(7.0) shouldBe Criticality.High
+        metric.getCriticality(7.5) shouldBe Criticality.Medium
+        metric.getCriticality(8.5) shouldBe Criticality.Low
+        metric.getCriticality(9.9) shouldBe Criticality.Low
+        metric.getCriticality(10.0) shouldBe Criticality.Low
+        metric.getCriticality(100.0) shouldBe Criticality.Low
     }
 
     "lowerIsBetterMetric should return the correct criticality" {
@@ -160,16 +160,16 @@ class CrossdTest : StringSpec({
             higherIsBetter = false,
             averageValue = 10.0
         )
-        metric.getCriticality(-100.0, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(0.0, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(7.0, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(7.5, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(8.5, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(9.9, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(10.0, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(11.5, 10.0) shouldBe Criticality.Low
-        metric.getCriticality(12.0, 10.0) shouldBe Criticality.Medium
-        metric.getCriticality(12.5, 10.0) shouldBe Criticality.Medium
-        metric.getCriticality(100.0, 10.0) shouldBe Criticality.High
+        metric.getCriticality(-100.0) shouldBe Criticality.Low
+        metric.getCriticality(0.0) shouldBe Criticality.Low
+        metric.getCriticality(7.0) shouldBe Criticality.Low
+        metric.getCriticality(7.5) shouldBe Criticality.Low
+        metric.getCriticality(8.5) shouldBe Criticality.Low
+        metric.getCriticality(9.9) shouldBe Criticality.Low
+        metric.getCriticality(10.0) shouldBe Criticality.Low
+        metric.getCriticality(11.5) shouldBe Criticality.Low
+        metric.getCriticality(12.0) shouldBe Criticality.Medium
+        metric.getCriticality(12.5) shouldBe Criticality.Medium
+        metric.getCriticality(100.0) shouldBe Criticality.High
     }
 })
