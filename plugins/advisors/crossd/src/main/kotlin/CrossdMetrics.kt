@@ -26,7 +26,7 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * CrOSSD does not provide a schema of their API responses.
  * And also there is no further information about the metrics in the response besides the raw value.
- * Therefore, we define the metrics that we have an explaination for from the documentation and an average value from the API.
+ * Therefore, we define the metrics that we have an explanation for from the documentation and an average value from the API.
  */
 val CROSSD_METRICS: Array<CrossdMetric> = arrayOf(
     CrossdMetric(
