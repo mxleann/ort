@@ -24,7 +24,7 @@ import java.util.ServiceLoader
 import org.ossreviewtoolkit.plugins.api.PluginFactory
 
 /**
- * A common abstract class for use with [ServiceLoader] that all [ProjectHealthProviderFactory] classes need to implement.
+ * A common interface for use with [ServiceLoader] that all [ProjectHealthProviderFactory] classes need to implement.
  */
 interface ProjectHealthProviderFactory : PluginFactory<ProjectHealthProvider> {
     companion object {

@@ -25,7 +25,7 @@ import org.ossreviewtoolkit.model.Package
 import org.ossreviewtoolkit.plugins.api.Plugin
 
 /**
- * An abstract class that represents a service that can retrieve project health metrics for a list of given
+ * An interface that represents a service that can retrieve project health metrics for a list of given
  * [Package]s.
  */
 interface ProjectHealthProvider : Plugin {

@@ -52,7 +52,7 @@ import java.time.Instant
 
 
 /**
- * An [ProjectHealthProvider] implementation that obtains security vulnerability information from a
+ * An [ProjectHealthProvider] implementation that obtains project health metrics information from a
  * [SCORECARD][https://github.com/ossf/scorecard] instance.
  */
 @OrtPlugin(
