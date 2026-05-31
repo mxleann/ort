@@ -115,11 +115,11 @@ class AdviseCommand(descriptor: PluginDescriptor = AdviseCommandFactory.descript
 
     private val projectHealthProviderFactories by option(
         "--project-health", "-p",
-        help = "The comma-separated project health analyzers to use, ane of ${ProjectHealthProviderFactory.ALL.keys}."
+        help = "The comma-separated project health analyzers to use, any of ${ProjectHealthProviderFactory.ALL.keys}."
     ).convert { name ->
         ProjectHealthProviderFactory.ALL[name]
             ?: throw BadParameterValue("Project health analyzer '$name' is not one of ${ProjectHealthProviderFactory.ALL.keys}.")
-    }.split(",").required()
+    }.split(",").default(emptyList())
 
     private val skipExcluded by option(
         "--skip-excluded",
@@ -141,7 +141,7 @@ class AdviseCommand(descriptor: PluginDescriptor = AdviseCommandFactory.descript
         echo("The following ${distinctProjectHealthProviders.size} project health advisor(s) are enabled:")
         echo("\t" + distinctProjectHealthProviders.joinToString { it.descriptor.id }.ifEmpty { "<None>" })
 
-        val advisor = Advisor(distinctProviders,distinctProjectHealthProviders,ortConfig.advisor)
+        val advisor = Advisor(distinctProviders, distinctProjectHealthProviders, ortConfig.advisor)
 
         val ortResultInput = readOrtResult(ortFile)
 
