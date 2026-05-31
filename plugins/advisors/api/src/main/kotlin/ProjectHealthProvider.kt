@@ -19,18 +19,24 @@
 
 package org.ossreviewtoolkit.plugins.advisors.api
 
-import java.util.ServiceLoader
-
-import org.ossreviewtoolkit.plugins.api.PluginFactory
+import org.ossreviewtoolkit.model.AdvisorDetails
+import org.ossreviewtoolkit.model.AdvisorResult
+import org.ossreviewtoolkit.model.Package
+import org.ossreviewtoolkit.plugins.api.Plugin
 
 /**
- * A common abstract class for use with [ServiceLoader] that all [ProjectHealthProviderFactory] classes need to implement.
+ * An abstract class that represents a service that can retrieve project health metrics for a list of given
+ * [Package]s.
  */
-interface ProjectHealthProviderFactory : PluginFactory<ProjectHealthProvider> {
-    companion object {
-        /**
-         * All [project health advice provider factories][ProjectHealthProviderFactory] available in the classpath, associated by their ids.
-         */
-        val ALL by lazy { PluginFactory.getAll<ProjectHealthProviderFactory, ProjectHealthProvider>() }
-    }
+interface ProjectHealthProvider : Plugin {
+    /**
+     * For a given set of [packages], retrieve findings and return a map of only those packages that actually have
+     * findings associated with an [AdvisorResult].
+     */
+    suspend fun retrievePackageFindings(packages: Set<Package>): Map<Package, AdvisorResult>
+
+    /**
+     * An object with detail information about this [ProjectHealthProvider].
+     */
+    val details: AdvisorDetails
 }

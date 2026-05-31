@@ -36,6 +36,7 @@ import org.ossreviewtoolkit.model.Package
 import org.ossreviewtoolkit.model.config.AdvisorConfiguration
 import org.ossreviewtoolkit.plugins.advisors.api.AdviceProvider
 import org.ossreviewtoolkit.plugins.advisors.api.AdviceProviderFactory
+import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProvider
 import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProviderFactory
 import org.ossreviewtoolkit.plugins.advisors.api.normalizeVulnerabilityData
 import org.ossreviewtoolkit.plugins.api.orEmpty
@@ -98,10 +99,30 @@ class Advisor(
                     }.getOrNull()
                 }
 
-                providers.map { provider ->
+                val projectHealthProviders = projectHealthProviderFactories.mapNotNull {
+                    runCatching {
+                        val providerConfig = config.advisors?.get(it.descriptor.id)
+                        it.create(providerConfig.orEmpty())
+                    }.onFailure { error ->
+                        providerIssues += Issue(
+                            source = "Advisor",
+                            message = "Failed to create project health provider '${it.descriptor.displayName}': " +
+                                error.collectMessages()
+                        )
+                    }.getOrNull()
+                }
+
+                val allProviders = providers + projectHealthProviders
+
+                allProviders.map { provider ->
                     async {
                         runCatching {
-                            val providerResults = provider.retrievePackageFindings(packages)
+                            val providerResults = when (provider) {
+                                is AdviceProvider -> provider.retrievePackageFindings(packages)
+                                is ProjectHealthProvider -> provider.retrievePackageFindings(packages)
+                                else -> emptyMap()
+                            }
+
 
                             logger.info {
                                 "Found ${providerResults.values.flatMap { it.vulnerabilities }.distinct().size} " +
