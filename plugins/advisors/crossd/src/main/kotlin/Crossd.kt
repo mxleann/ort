@@ -66,7 +66,7 @@ import kotlin.collections.emptyMap
 
 
 /**
- * An [ProjectHealthProvider] implementation that obtains project health metrics information from a
+ * A [ProjectHealthProvider] implementation that obtains project health metrics from a
  * [CrOSSD][https://health.crossd.tech/doc] instance.
  */
 @OrtPlugin(
