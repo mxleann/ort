@@ -53,8 +53,8 @@ import org.ossreviewtoolkit.model.Criticality
 import org.ossreviewtoolkit.model.Issue
 import org.ossreviewtoolkit.model.Package
 import org.ossreviewtoolkit.model.ProjectHealth
-import org.ossreviewtoolkit.plugins.advisors.api.AdviceProvider
-import org.ossreviewtoolkit.plugins.advisors.api.AdviceProviderFactory
+import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProvider
+import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProviderFactory
 import org.ossreviewtoolkit.plugins.api.OrtPlugin
 import org.ossreviewtoolkit.plugins.api.PluginDescriptor
 import org.ossreviewtoolkit.utils.ort.okHttpClient
@@ -66,20 +66,20 @@ import kotlin.collections.emptyMap
 
 
 /**
- * An [AdviceProvider] implementation that obtains security vulnerability information from a
+ * A [ProjectHealthProvider] implementation that obtains project health metrics from a
  * [CrOSSD][https://health.crossd.tech/doc] instance.
  */
 @OrtPlugin(
     id = "Crossd",
     displayName = "CrOSSD",
     description = "An advisor that uses a CrOSSD instance to determine project health in dependencies.",
-    factory = AdviceProviderFactory::class
+    factory = ProjectHealthProviderFactory::class
 )
 
 class Crossd (
     override val descriptor: PluginDescriptor = CrossdFactory.descriptor,
     config: CrossdConfig
-) : AdviceProvider {
+) : ProjectHealthProvider {
 
     private val client = HttpClient(OkHttp) {
         engine {

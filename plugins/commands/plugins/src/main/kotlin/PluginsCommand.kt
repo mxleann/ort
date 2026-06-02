@@ -28,6 +28,7 @@ import com.github.ajalt.mordant.widgets.UnorderedList
 import org.ossreviewtoolkit.analyzer.PackageManagerFactory
 import org.ossreviewtoolkit.downloader.VersionControlSystemFactory
 import org.ossreviewtoolkit.plugins.advisors.api.AdviceProviderFactory
+import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProviderFactory
 import org.ossreviewtoolkit.plugins.api.OrtPlugin
 import org.ossreviewtoolkit.plugins.api.PluginDescriptor
 import org.ossreviewtoolkit.plugins.commands.api.OrtCommand
@@ -104,6 +105,11 @@ private enum class PluginType(
         "advice-providers",
         "Advice Providers",
         lazy { AdviceProviderFactory.ALL.map { it.value.descriptor } }
+    ),
+    PROJECT_HEALTH_PROVIDERS(
+        "project-health-providers",
+        "Project Health Providers",
+        lazy { ProjectHealthProviderFactory.ALL.map { it.value.descriptor } }
     ),
     COMMANDS(
         "commands",
