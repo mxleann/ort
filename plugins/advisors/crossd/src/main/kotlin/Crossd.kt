@@ -57,6 +57,7 @@ import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProvider
 import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProviderFactory
 import org.ossreviewtoolkit.plugins.api.OrtPlugin
 import org.ossreviewtoolkit.plugins.api.PluginDescriptor
+import org.ossreviewtoolkit.utils.ort.getVcsUrlOwnerAndName
 import org.ossreviewtoolkit.utils.ort.okHttpClient
 import java.io.IOException
 import java.time.Instant
@@ -107,11 +108,9 @@ class Crossd (
 
         val startTime = Instant.now()
         val issues = mutableListOf<Issue>()
-        val regex =
-            """^[a-z]+://[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+/([a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+)(?:\.git)?$""".toRegex()
 
         // find project owner and name from git URL and report missing ones
-        val packageIds = packages.associateWith { regex.find(it.vcsProcessed.url)?.groupValues[1] }
+        val packageIds = packages.associateWith { getVcsUrlOwnerAndName(it.vcsProcessed.url) }
         packageIds.filterValues { it == null }.mapTo(issues) { pkg ->
             Issue(
                 source = descriptor.displayName,
