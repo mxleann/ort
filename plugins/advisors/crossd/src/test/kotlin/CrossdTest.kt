@@ -24,6 +24,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import org.ossreviewtoolkit.clients.crossd.CrossdMetric
 import org.ossreviewtoolkit.model.Criticality
 import org.ossreviewtoolkit.model.Identifier
 import org.ossreviewtoolkit.model.Package
