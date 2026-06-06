@@ -48,6 +48,7 @@ import org.ossreviewtoolkit.plugins.api.OrtPlugin
 import org.ossreviewtoolkit.plugins.api.PluginDescriptor
 import org.ossreviewtoolkit.utils.ort.okHttpClient
 import org.apache.logging.log4j.kotlin.logger
+import org.ossreviewtoolkit.utils.ort.getVcsUrlParts
 import java.time.Instant
 
 
@@ -91,22 +92,15 @@ class Scorecard (
     override suspend fun retrievePackageFindings(packages: Set<Package>): Map<Package, AdvisorResult> {
         val startTime = Instant.now()
         val issues = mutableListOf<Issue>()
-        val regex = """^[a-z]+://([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)/([a-zA-Z0-9-_]+)/([a-zA-Z0-9-_]+)(?:\.git)?$""".toRegex()
 
-        val nonEmptyUrls = packages
-            .filter {
-                it.vcsProcessed.url.isNotEmpty()}
-        val validUrls = nonEmptyUrls
-            .filter {
-                it.vcsProcessed.url.matches(regex)}
-            .associateWithTo(mutableMapOf()) { pkg ->
-                regex.find(pkg.vcsProcessed.url)
-            }
+        val validUrls = packages
+            .associateWith {getVcsUrlParts(it.vcsProcessed.url)}
+            .filterValues { it != null }
 
         val responses = withContext(Dispatchers.IO.limitedParallelism(20)) {
             validUrls.mapValues { (pkg, repoData) ->
                 async {
-                    val (platform, org, repo) = repoData!!.destructured
+                    val (platform, org, repo) = repoData!!
                     client.getResult(platform, org, repo) ?: run {
                         logger.warn { "The VCS URL ${pkg.vcsProcessed.url} could not be found in the scorecard database." }
                         null
