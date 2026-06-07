@@ -139,7 +139,7 @@ class Crossd (
 
         CROSSD_METRICS.forEach { metric ->
             val average = averages[metric.name]?.jsonPrimitive?.double
-            average.let { metric.averageValue = average!! }
+            average?.let { metric.averageValue = average }
         }
     }
 
