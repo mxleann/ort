@@ -29,7 +29,10 @@ plugins {
 }
 
 dependencies {
+    api(projects.model)
+
     api(libs.kotlinx.serialization.core)
+    api(libs.kotlinx.serialization.json)
 
     api(ktorLibs.client.core)
 

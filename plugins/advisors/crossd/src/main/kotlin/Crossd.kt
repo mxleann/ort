@@ -24,7 +24,6 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -38,18 +37,16 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.double
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import org.ossreviewtoolkit.clients.crossd.CROSSD_METRICS
 
 import org.ossreviewtoolkit.model.AdvisorDetails
 import org.ossreviewtoolkit.model.AdvisorResult
 import org.ossreviewtoolkit.model.AdvisorSummary
-import org.ossreviewtoolkit.model.Criticality
 import org.ossreviewtoolkit.model.Issue
 import org.ossreviewtoolkit.model.Package
 import org.ossreviewtoolkit.model.ProjectHealth
@@ -57,12 +54,9 @@ import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProvider
 import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProviderFactory
 import org.ossreviewtoolkit.plugins.api.OrtPlugin
 import org.ossreviewtoolkit.plugins.api.PluginDescriptor
+import org.ossreviewtoolkit.utils.ort.getVcsUrlOwnerAndName
 import org.ossreviewtoolkit.utils.ort.okHttpClient
-import java.io.IOException
 import java.time.Instant
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.emptyMap
 
 
 /**
@@ -107,11 +101,9 @@ class Crossd (
 
         val startTime = Instant.now()
         val issues = mutableListOf<Issue>()
-        val regex =
-            """^[a-z]+://[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+/([a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+)(?:\.git)?$""".toRegex()
 
         // find project owner and name from git URL and report missing ones
-        val packageIds = packages.associateWith { regex.find(it.vcsProcessed.url)?.groupValues[1] }
+        val packageIds = packages.associateWith { getVcsUrlOwnerAndName(it.vcsProcessed.url) }
         packageIds.filterValues { it == null }.mapTo(issues) { pkg ->
             Issue(
                 source = descriptor.displayName,
