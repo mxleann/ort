@@ -1,4 +1,5 @@
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -42,7 +43,7 @@ class ScorecardTest : StringSpec({
         result.values.first().projectHealth.shouldNotBeEmpty()
     }
 
-    "retrievePackageFindings for a valid package not known by scorecard should return issues" {
+    "retrievePackageFindings for a valid package not known by scorecard should return empty health data" {
         val pkg = Package(
             id = Identifier("VCS:oss-review-toolkit:ort:2.5.0"),
             declaredLicenses = emptySet(),
@@ -65,12 +66,13 @@ class ScorecardTest : StringSpec({
         val result = scorecard.retrievePackageFindings(setOf(pkg))
 
 
+        result shouldNotBe null
         result.keys shouldBe setOf(pkg)
-        val issue = result.getValue(pkg).summary.issues.first()
-        issue.message shouldBe "The VCS URL 'https://github.com/mxleann/ort.git' could not be found in the scorecard database."
+        result.values.first().advisor shouldBe scorecard.details
+        result.values.first().projectHealth.shouldBeEmpty()
     }
 
-    "retrievePackageFindings for a package with no vcs should return an issue" {
+    "retrievePackageFindings for a package with no vcs should return empty health data" {
         val pkg = Package(
             id = Identifier("Maven:org.apache.logging.log4j:log4j-api:2.14.1"),
             declaredLicenses = emptySet(),
@@ -84,12 +86,13 @@ class ScorecardTest : StringSpec({
 
         val result = scorecard.retrievePackageFindings(setOf(pkg))
 
+        result shouldNotBe null
         result.keys shouldBe setOf(pkg)
-        val issue = result.getValue(pkg).summary.issues.first()
-        issue.message shouldBe "The VCS URL '' could not be mapped to a repository."
+        result.values.first().advisor shouldBe scorecard.details
+        result.values.first().projectHealth.shouldBeEmpty()
     }
 
-    "retrievePackageFindings for a malformed vcs url should return an issue" {
+    "retrievePackageFindings for a malformed vcs url should return empty health data" {
         val pkg = Package(
             id = Identifier("Maven:org.apache.logging.log4j:log4j-api:2.14.1"),
             declaredLicenses = emptySet(),
@@ -107,9 +110,10 @@ class ScorecardTest : StringSpec({
 
         val result = scorecard.retrievePackageFindings(setOf(pkg))
 
+        result shouldNotBe null
         result.keys shouldBe setOf(pkg)
-        val issue = result.getValue(pkg).summary.issues.first()
-       issue.message shouldBe "The VCS URL 'https://invalid-url' could not be mapped to a repository."
+        result.values.first().advisor shouldBe scorecard.details
+        result.values.first().projectHealth.shouldBeEmpty()
     }
 
     "determineValueCriticality should return the correct criticality" {

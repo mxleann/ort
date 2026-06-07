@@ -93,57 +93,29 @@ class Scorecard (
         val startTime = Instant.now()
         val issues = mutableListOf<Issue>()
 
-        val validUrls = packages
+        val packageInfo = packages
             .associateWith {getVcsUrlParts(it.vcsProcessed.url)}
-            .filterValues { it != null }
+
 
         val responses = withContext(Dispatchers.IO.limitedParallelism(20)) {
-            validUrls.mapValues { (pkg, repoData) ->
+            packageInfo.mapValues { (pkg, repoData) ->
                 async {
-                    val (platform, org, repo) = repoData!!
-                    client.getResult(platform, org, repo) ?: run {
-                        logger.warn { "The VCS URL ${pkg.vcsProcessed.url} could not be found in the scorecard database." }
+                    if (repoData != null) {
+                        val (platform, org, repo) = repoData
+                        client.getResult(platform, org, repo)
+                    } else {
                         null
                     }
                 }
             }
         }.mapValues { it.value.await() }
 
-        // Packages that did not lead to a valid response from scorecard
-        val reposNotFound = responses.filterValues { it == null }.keys
-
-        reposNotFound.mapTo(issues) { pkg ->
-            Issue(
-                source = descriptor.displayName,
-                message = "The VCS URL '${pkg.vcsProcessed.url}' could not be found in the scorecard database."
-            )
-        }
-
-        // Packages that have an invalid url
-        val invalidUrls = packages.filterNot { it in validUrls.keys }
-
-        invalidUrls.mapTo(issues) { pkg ->
-            Issue(
-                source = descriptor.displayName,
-                message = "The VCS URL '${pkg.vcsProcessed.url}' could not be mapped to a repository."
-            )
-        }
-
-        // Packages with valid responses from scorecard merged with Packages with issues
         val projectHealthList: List<Pair<Package, List<ProjectHealth>>> = (responses
-            .mapNotNull { (pkg, scorecardResult) ->
-
-                scorecardResult?.let {
-                    val healthData = listOf(it).toProjectHealthList()
+            .map { (pkg, scorecardResult) ->
+                    val healthData = scorecardResult?.let { listOf(it).toProjectHealthList() } ?: emptyList()
                     pkg to healthData
-                }
 
-            }+ invalidUrls.map { pkg ->
-            pkg to emptyList()
-            }+ reposNotFound.map { pkg ->
-                pkg to emptyList()
-            }
-        )
+            })
 
         val endTime = Instant.now()
 
@@ -155,8 +127,8 @@ class Scorecard (
     fun List<ScorecardResult>.toProjectHealthList(): List<ProjectHealth> {
         return this.flatMap { result ->
             result.checks.map { metric ->
-                // metrics without name or score are useless and should not be included in the list
-                if (metric.name != null || metric.score != null) {
+                // Filter out useless metrics: those without a name or score, or with a score of -1 (indicating a server-side error).
+                if (metric.name != null && metric.score != null && metric.score != -1) {
                 ProjectHealth(
                     name = metric.name ?: "",
                     value = metric.score?.toDouble() ?: -1.0,
