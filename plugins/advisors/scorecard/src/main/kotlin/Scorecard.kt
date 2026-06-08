@@ -31,6 +31,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import kotlinx.serialization.json.Json
 import org.ossreviewtoolkit.clients.scorecard.ScorecardResult
 import org.ossreviewtoolkit.clients.scorecard.client.getResult
@@ -94,17 +95,14 @@ class Scorecard (
         val issues = mutableListOf<Issue>()
 
         val packageInfo = packages
-            .associateWith {getVcsUrlParts(it.vcsProcessed.url)}
-
+            .associateWith { getVcsUrlParts(it.vcsProcessed.url) }
 
         val responses = withContext(Dispatchers.IO.limitedParallelism(20)) {
             packageInfo.mapValues { (pkg, repoData) ->
                 async {
-                    if (repoData != null) {
-                        val (platform, org, repo) = repoData
+                    repoData?.let {
+                        val (platform, org, repo) = it
                         client.getResult(platform, org, repo)
-                    } else {
-                        null
                     }
                 }
             }
@@ -112,9 +110,8 @@ class Scorecard (
 
         val projectHealthList: List<Pair<Package, List<ProjectHealth>>> = (responses
             .map { (pkg, scorecardResult) ->
-                    val healthData = scorecardResult?.let { listOf(it).toProjectHealthList() } ?: emptyList()
-                    pkg to healthData
-
+                val healthData = scorecardResult?.toProjectHealthList() ?: emptyList()
+                pkg to healthData
             })
 
         val endTime = Instant.now()
@@ -124,24 +121,21 @@ class Scorecard (
         }
     }
 
-    fun List<ScorecardResult>.toProjectHealthList(): List<ProjectHealth> {
-        return this.flatMap { result ->
-            result.checks.map { metric ->
-                // Filter out useless metrics: those without a name or score, or with a score of -1 (indicating a server-side error).
-                if (metric.name != null && metric.score != null && metric.score != -1) {
+    fun ScorecardResult.toProjectHealthList(): List<ProjectHealth> {
+        return this.checks
+            .filter { metric -> metric.name != null && metric.score != null && metric.score != -1 }
+            .map { metric ->
                 ProjectHealth(
-                    name = metric.name ?: "",
-                    value = metric.score?.toDouble() ?: -1.0,
+                    name = metric.name!!,
+                    value = metric.score!!.toDouble(),
                     criticality = metric.score?.let { determineValueCriticality(it) },
                     reason = metric.reason,
                     details = metric.details,
                     documentation = metric.documentation?.short,
                     documentationLink = metric.documentation?.url,
                     source = descriptor.id
-                    )
-                } else { null }
+                )
             }
-        }.filterNotNull()
     }
 
     fun determineValueCriticality (value: Int) : Criticality {
