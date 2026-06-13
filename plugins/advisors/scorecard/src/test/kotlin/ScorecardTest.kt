@@ -43,7 +43,7 @@ class ScorecardTest : StringSpec({
         result.values.first().projectHealth.shouldNotBeEmpty()
     }
 
-    "retrievePackageFindings for a valid package not known by scorecard should return empty health data" {
+    "retrievePackageFindings for a package not known by scorecard should return empty health data" {
         val pkg = Package(
             id = Identifier("VCS:oss-review-toolkit:ort:2.5.0"),
             declaredLicenses = emptySet(),
@@ -51,14 +51,11 @@ class ScorecardTest : StringSpec({
             homepageUrl = "",
             binaryArtifact = RemoteArtifact.EMPTY,
             sourceArtifact = RemoteArtifact.EMPTY,
-            vcs = VcsInfo(
-                type = VcsType.GIT,
-                url = "https://github.com/mxleann/ort.git",
-                revision = "ddde192"
-            ),
+            vcs = VcsInfo.EMPTY,
             vcsProcessed = VcsInfo(
                 type = VcsType.GIT,
-                url = "https://github.com/mxleann/ort.git",
+                // This repository doesn't exist, and it never will because these characters aren't allowed in a GitHub username
+                url = "https://github.com/täßt/this-will-never-exist.git",
                 revision = "ddde192"
             )
         )
