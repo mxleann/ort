@@ -66,7 +66,7 @@ import java.time.Instant
 @OrtPlugin(
     id = "Crossd",
     displayName = "CrOSSD",
-    description = "An advisor that uses a CrOSSD instance to determine project health in dependencies.",
+    summary = "An advisor that uses a CrOSSD instance to determine project health in dependencies.",
     factory = ProjectHealthProviderFactory::class
 )
 
