@@ -17,7 +17,7 @@
  * License-Filename: LICENSE
  */
 
-package org.ossreviewtoolkit.clients.crossd
+package org.ossreviewtoolkit.plugins.advisors.crossd
 
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonObject
