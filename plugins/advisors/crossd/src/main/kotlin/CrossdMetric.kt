@@ -67,16 +67,13 @@ data class CrossdMetric(
 ) {
 
     /**
-     * Calculate the criticality of the value
+     * Calculate the criticality of a value
      * It's based on the same evaluation method that CrOSSD uses:
      * It calculates the difference to the average (in percent) and
-     * uses fixed thresholds for the ratings (% worse than avg):
-     * <= 15%  : green  (LOW)
-     * <= 25%  : yellow (MEDIUM)
-     * >  25%  : red    (HIGH)
+     * uses fixed thresholds (changeable in config) for the rating.
      *
-     * If value is higher than avg and *higherIsBetter* is set (and vice versa) then
-     * it always considered green (LOW)
+     * If value is higher than avg and *higherIsBetter* is set (or vice versa) then
+     * it always considered LOW
      *
      * The values are multiplied by 100 to circumvent floating point errors, especially for the unit tests.
      */
