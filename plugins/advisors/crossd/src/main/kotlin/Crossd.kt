@@ -20,31 +20,20 @@
 package org.ossreviewtoolkit.plugins.advisors.crossd
 
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.double
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import org.ossreviewtoolkit.clients.crossd.getAverageValues
+import org.ossreviewtoolkit.clients.crossd.getMetrics
 
 import org.ossreviewtoolkit.model.AdvisorDetails
 import org.ossreviewtoolkit.model.AdvisorResult
@@ -59,13 +48,8 @@ import org.ossreviewtoolkit.plugins.api.OrtPlugin
 import org.ossreviewtoolkit.plugins.api.PluginDescriptor
 import org.ossreviewtoolkit.utils.ort.getVcsUrlOwnerAndName
 import org.ossreviewtoolkit.utils.ort.okHttpClient
-import java.io.IOException
 import java.time.Instant
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.emptyMap
-import kotlin.math.ceil
-import kotlin.math.round
+import kotlin.collections.emptyList
 
 
 /**
@@ -127,7 +111,8 @@ class Crossd (
             packageIds.mapValues { entry ->
                 async {
                     entry.value?.let { packageId ->
-                        getMetrics(packageId)
+                        val metrics = client.getMetrics(packageId)
+                        CROSSD_METRICS.mapNotNull { it.toProjectHealth(metrics) }
                     } ?: emptyList()
                 }
             }.mapValues { it.value.await() }
@@ -141,69 +126,25 @@ class Crossd (
     }
 
     suspend fun updateAverageValues() {
-        val response = client.post("/api/metrics/avg")
-        if (!response.status.isSuccess())
-            return
-
-        val averages = (response.body() as JsonObject)["avg"]?.jsonObject
-            ?: return
-
+        val averages = client.getAverageValues()
         CROSSD_METRICS.forEach { metric ->
-            val average = averages[metric.name]?.jsonPrimitive?.double
+            val average = averages[metric.name]
             average?.let { metric.averageValue = average }
         }
     }
 
-    suspend fun getAvailableSnapshots(packageId: String): List<Double> {
-        val response = client.post("/api/snapshots") {
-          setBody(buildJsonObject {
-              put("term", packageId)
-          })
+    fun CrossdMetric.toProjectHealth(metrics: JsonObject): ProjectHealth? {
+        val value = valueGetter(metrics)
+        return value?.let {
+            ProjectHealth(
+                name = name,
+                value = value,
+                criticality = getCriticality(value, thresholds),
+                documentation = descriptionShort,
+                documentationLink = documentationUrl,
+                details = emptyList(),
+                source = descriptor.id
+            )
         }
-
-        if (!response.status.isSuccess())
-            return emptyList()
-
-        return (response.body() as JsonArray).map { it.jsonPrimitive.double }.sortedDescending()
-    }
-
-    suspend fun getLatestSnapshot(packageId: String): Double? {
-        return getAvailableSnapshots(packageId).getOrNull(0)
-    }
-
-    suspend fun getMetrics(packageId: String, snapshot: Double): List<ProjectHealth> {
-        val response = client.post("/api/metrics") {
-            setBody(buildJsonObject {
-                put("term", packageId)
-                put("timestamp", snapshot)
-            })
-        }
-
-        if (!response.status.isSuccess())
-            return emptyList()
-
-        val metrics = (response.body() as JsonObject)["metrics"]?.jsonObject
-            ?: return emptyList()
-
-        return CROSSD_METRICS.flatMap { metric ->
-            val value = metric.valueGetter(metrics)
-            value?.let {
-                listOf(ProjectHealth(
-                    name = metric.name,
-                    value = value,
-                    criticality = metric.getCriticality(value, thresholds),
-                    documentation = metric.descriptionShort,
-                    documentationLink = metric.documentationUrl,
-                    details = emptyList(),
-                    source = descriptor.id
-                ))
-            } ?: emptyList()
-        }
-    }
-
-    suspend fun getMetrics(packageId: String): List<ProjectHealth> {
-        return getLatestSnapshot(packageId)?.let {
-            return getMetrics(packageId, it)
-        } ?: emptyList()
     }
 }
