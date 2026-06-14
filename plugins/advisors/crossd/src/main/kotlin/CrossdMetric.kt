@@ -23,7 +23,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonPrimitive
 import org.ossreviewtoolkit.model.Criticality
-import kotlin.math.round
+import kotlin.math.floor
 
 data class CrossdMetric(
 
@@ -80,13 +80,13 @@ data class CrossdMetric(
      *
      * The values are multiplied by 100 to circumvent floating point errors, especially for the unit tests.
      */
-    fun getCriticality(value: Double): Criticality {
-        val percentWorse = round((1 - (value / averageValue)) * (if (higherIsBetter) 10000 else -10000))
+    fun getCriticality(value: Double, thresholds: Map<Criticality, Int>): Criticality {
+        val percentWorse = floor((1 - (value / averageValue)) * (if (higherIsBetter) 10000 else -10000)) / 100
 
-        return when {
-            percentWorse <= 1500 -> Criticality.Low
-            percentWorse <= 2500 -> Criticality.Medium
-            else -> Criticality.High
+        for ((criticality, threshold) in thresholds) {
+            if (percentWorse <= threshold) return criticality
         }
+
+        return Criticality.Critical
     }
 }

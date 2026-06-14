@@ -64,6 +64,8 @@ import java.time.Instant
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.emptyMap
+import kotlin.math.ceil
+import kotlin.math.round
 
 
 /**
@@ -101,6 +103,8 @@ class Crossd (
     }
 
     override val details = AdvisorDetails(descriptor.id)
+
+    private val thresholds: Map<Criticality, Int> = config.getThresholds()
 
     override suspend fun retrievePackageFindings(packages: Set<Package>): Map<Package, AdvisorResult> {
         // update average values that are used for the value ratings
@@ -187,7 +191,7 @@ class Crossd (
                 listOf(ProjectHealth(
                     name = metric.name,
                     value = value,
-                    criticality = metric.getCriticality(value),
+                    criticality = metric.getCriticality(value, thresholds),
                     documentation = metric.descriptionShort,
                     documentationLink = metric.documentationUrl,
                     details = emptyList(),

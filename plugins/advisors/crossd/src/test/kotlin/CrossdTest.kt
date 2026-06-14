@@ -32,7 +32,13 @@ import org.ossreviewtoolkit.model.VcsInfo
 import org.ossreviewtoolkit.model.VcsType
 
 class CrossdTest : StringSpec({
-    val crossd = Crossd(config = CrossdConfig(apiUrl = "https://health.crossd.tech"))
+    val testConfig = CrossdConfig(
+        apiUrl = "https://health.crossd.tech",
+        thresholdCriticalityLow = 15,
+        thresholdCriticalityMedium = 25,
+        thresholdCriticalityHigh = 30)
+    val testThresholds = testConfig.getThresholds()
+    val crossd = Crossd(config = testConfig)
 
     "retrievePackageFindings for a valid package should return findings" {
         val pkg = Package(
@@ -141,14 +147,14 @@ class CrossdTest : StringSpec({
             higherIsBetter = true,
             averageValue = 10.0
         )
-        metric.getCriticality(-100.0) shouldBe Criticality.High
-        metric.getCriticality(0.0) shouldBe Criticality.High
-        metric.getCriticality(7.0) shouldBe Criticality.High
-        metric.getCriticality(7.5) shouldBe Criticality.Medium
-        metric.getCriticality(8.5) shouldBe Criticality.Low
-        metric.getCriticality(9.9) shouldBe Criticality.Low
-        metric.getCriticality(10.0) shouldBe Criticality.Low
-        metric.getCriticality(100.0) shouldBe Criticality.Low
+        metric.getCriticality(-100.0, testThresholds) shouldBe Criticality.Critical
+        metric.getCriticality(0.0, testThresholds) shouldBe Criticality.Critical
+        metric.getCriticality(7.0, testThresholds) shouldBe Criticality.High
+        metric.getCriticality(7.5, testThresholds) shouldBe Criticality.Medium
+        metric.getCriticality(8.5, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(9.9, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(10.0, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(100.0, testThresholds) shouldBe Criticality.Low
     }
 
     "lowerIsBetterMetric should return the correct criticality" {
@@ -160,16 +166,17 @@ class CrossdTest : StringSpec({
             higherIsBetter = false,
             averageValue = 10.0
         )
-        metric.getCriticality(-100.0) shouldBe Criticality.Low
-        metric.getCriticality(0.0) shouldBe Criticality.Low
-        metric.getCriticality(7.0) shouldBe Criticality.Low
-        metric.getCriticality(7.5) shouldBe Criticality.Low
-        metric.getCriticality(8.5) shouldBe Criticality.Low
-        metric.getCriticality(9.9) shouldBe Criticality.Low
-        metric.getCriticality(10.0) shouldBe Criticality.Low
-        metric.getCriticality(11.5) shouldBe Criticality.Low
-        metric.getCriticality(12.0) shouldBe Criticality.Medium
-        metric.getCriticality(12.5) shouldBe Criticality.Medium
-        metric.getCriticality(100.0) shouldBe Criticality.High
+        metric.getCriticality(-100.0, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(0.0, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(7.0, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(7.5, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(8.5, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(9.9, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(10.0, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(11.5, testThresholds) shouldBe Criticality.Low
+        metric.getCriticality(12.0, testThresholds) shouldBe Criticality.Medium
+        metric.getCriticality(12.5, testThresholds) shouldBe Criticality.Medium
+        metric.getCriticality(13.0, testThresholds) shouldBe Criticality.High
+        metric.getCriticality(100.0, testThresholds) shouldBe Criticality.Critical
     }
 })
