@@ -20,6 +20,7 @@
 package org.ossreviewtoolkit.plugins.advisors.crossd
 
 import org.ossreviewtoolkit.clients.crossd.CROSSD_BASE_URL
+import org.ossreviewtoolkit.model.Criticality
 import org.ossreviewtoolkit.plugins.api.OrtPluginOption
 
 
@@ -30,5 +31,25 @@ import org.ossreviewtoolkit.plugins.api.OrtPluginOption
 data class CrossdConfig (
     /** The URL of the CrOSSD server. */
     @OrtPluginOption(defaultValue = CROSSD_BASE_URL)
-    val apiUrl: String
-)
+    val apiUrl: String,
+
+    /** The maximum difference between value and average (in percent) such that the criticality is considered LOW */
+    @OrtPluginOption(defaultValue = "15")
+    val thresholdCriticalityLow: Int,
+
+    /** The maximum difference between value and average (in percent) such that the criticality is considered MEDIUM */
+    @OrtPluginOption(defaultValue = "25")
+    val thresholdCriticalityMedium: Int,
+
+    /** The maximum difference between value and average (in percent) such that the criticality is considered HIGH */
+    @OrtPluginOption(defaultValue = "40")
+    val thresholdCriticalityHigh: Int
+) {
+    fun getThresholds(): Map<Criticality, Int> {
+        return linkedMapOf(
+            Criticality.Low to thresholdCriticalityLow,
+            Criticality.Medium to thresholdCriticalityMedium,
+            Criticality.High to thresholdCriticalityHigh,
+        )
+    }
+}

@@ -319,7 +319,7 @@ private fun mockkAdviceProvider(displayName: String = "Provider"): AdviceProvide
 
 private fun mockkProjectHealthProvider(displayName: String = "HealthProvider"): ProjectHealthProvider =
     mockk<ProjectHealthProvider>().apply {
-        every { descriptor } returns PluginDescriptor(displayName, displayName, "", emptyList())
+        every { descriptor } returns PluginDescriptor(id=displayName, displayName=displayName, summary="", options=emptyList())
     }
 
 private fun mockkAdvisorResult(

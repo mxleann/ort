@@ -59,7 +59,7 @@ import java.time.Instant
 @OrtPlugin(
     id = "Scorecard",
     displayName = "SCORECARD",
-    description = "An advisor that uses a SCORECARD instance to determine project health in dependencies.",
+    summary = "An advisor that uses a SCORECARD instance to determine project health in dependencies.",
     factory = ProjectHealthProviderFactory::class
 )
 

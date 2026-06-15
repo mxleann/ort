@@ -17,13 +17,13 @@
  * License-Filename: LICENSE
  */
 
-package org.ossreviewtoolkit.clients.crossd
+package org.ossreviewtoolkit.plugins.advisors.crossd
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonPrimitive
 import org.ossreviewtoolkit.model.Criticality
-import kotlin.math.round
+import kotlin.math.floor
 
 data class CrossdMetric(
 
@@ -67,26 +67,23 @@ data class CrossdMetric(
 ) {
 
     /**
-     * Calculate the criticality of the value
+     * Calculate the criticality of a value
      * It's based on the same evaluation method that CrOSSD uses:
      * It calculates the difference to the average (in percent) and
-     * uses fixed thresholds for the ratings (% worse than avg):
-     * <= 15%  : green  (LOW)
-     * <= 25%  : yellow (MEDIUM)
-     * >  25%  : red    (HIGH)
+     * uses fixed thresholds (changeable in config) for the rating.
      *
-     * If value is higher than avg and *higherIsBetter* is set (and vice versa) then
-     * it always considered green (LOW)
+     * If value is higher than avg and *higherIsBetter* is set (or vice versa) then
+     * it always considered LOW
      *
      * The values are multiplied by 100 to circumvent floating point errors, especially for the unit tests.
      */
-    fun getCriticality(value: Double): Criticality {
-        val percentWorse = round((1 - (value / averageValue)) * (if (higherIsBetter) 10000 else -10000))
+    fun getCriticality(value: Double, thresholds: Map<Criticality, Int>): Criticality {
+        val percentWorse = floor((1 - (value / averageValue)) * (if (higherIsBetter) 10000 else -10000)) / 100
 
-        return when {
-            percentWorse <= 1500 -> Criticality.Low
-            percentWorse <= 2500 -> Criticality.Medium
-            else -> Criticality.High
+        for ((criticality, threshold) in thresholds) {
+            if (percentWorse <= threshold) return criticality
         }
+
+        return Criticality.Critical
     }
 }
