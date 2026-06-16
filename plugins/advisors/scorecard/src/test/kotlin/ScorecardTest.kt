@@ -1,16 +1,17 @@
+package org.ossreviewtoolkit.plugins.advisors.scorecard
+
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+
 import org.ossreviewtoolkit.model.Criticality
 import org.ossreviewtoolkit.model.Identifier
 import org.ossreviewtoolkit.model.Package
 import org.ossreviewtoolkit.model.RemoteArtifact
 import org.ossreviewtoolkit.model.VcsInfo
 import org.ossreviewtoolkit.model.VcsType
-import org.ossreviewtoolkit.plugins.advisors.scorecard.Scorecard
-import org.ossreviewtoolkit.plugins.advisors.scorecard.ScorecardConfig
 
 class ScorecardTest : StringSpec({
     val scorecard = Scorecard(config = ScorecardConfig(apiUrl = "https://api.securityscorecards.dev"))
@@ -54,14 +55,14 @@ class ScorecardTest : StringSpec({
             vcs = VcsInfo.EMPTY,
             vcsProcessed = VcsInfo(
                 type = VcsType.GIT,
-                // This repository doesn't exist, and it never will because these characters aren't allowed in a GitHub username
+                // This repository doesn't exist, and it never will because
+                // these characters aren't allowed in a GitHub username
                 url = "https://github.com/täßt/this-will-never-exist.git",
                 revision = "ddde192"
             )
         )
 
         val result = scorecard.retrievePackageFindings(setOf(pkg))
-
 
         result shouldNotBe null
         result.keys shouldBe setOf(pkg)

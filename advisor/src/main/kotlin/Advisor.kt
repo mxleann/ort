@@ -123,7 +123,6 @@ class Advisor(
                                 else -> emptyMap()
                             }
 
-
                             logger.info {
                                 "Found ${providerResults.values.flatMap { it.vulnerabilities }.distinct().size} " +
                                     "distinct vulnerabilities via ${provider.descriptor.displayName}. "

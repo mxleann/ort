@@ -19,11 +19,13 @@
 
 package org.ossreviewtoolkit.plugins.advisors.crossd
 
+import kotlin.math.floor
+
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonPrimitive
+
 import org.ossreviewtoolkit.model.Criticality
-import kotlin.math.floor
 
 data class CrossdMetric(
 
@@ -53,7 +55,8 @@ data class CrossdMetric(
     val higherIsBetter: Boolean,
 
     /**
-     * The average value as returned by [the CrOSSD API](https://fh-crossd.github.io/components/api/api.html#apimetricsavg) as of *2026-05-23*
+     * The average value as returned by
+     * [the CrOSSD API](https://fh-crossd.github.io/components/api/api.html#apimetricsavg) as of *2026-05-23*
      * This is used only as a fallback if the newest values could not be fetched.
      */
     var averageValue: Double,

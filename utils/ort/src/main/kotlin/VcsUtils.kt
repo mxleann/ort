@@ -116,6 +116,5 @@ fun getVcsUrlParts(normalizedVcsUrl: String?): List<String>? {
 /**
  * Returns the Repository owner and name, concatenated with a forward slash ("/") from a [normalized VCS URL][normalizedVcsUrl]
  */
-fun getVcsUrlOwnerAndName(normalizedVcsUrl: String?): String? {
-    return getVcsUrlParts(normalizedVcsUrl)?.drop(1)?.joinToString("/")
-}
+fun getVcsUrlOwnerAndName(normalizedVcsUrl: String?): String? =
+    getVcsUrlParts(normalizedVcsUrl)?.drop(1)?.joinToString("/")

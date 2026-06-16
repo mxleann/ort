@@ -29,7 +29,8 @@ import org.ossreviewtoolkit.plugins.api.PluginFactory
 interface ProjectHealthProviderFactory : PluginFactory<ProjectHealthProvider> {
     companion object {
         /**
-         * All [project health provider factories][ProjectHealthProviderFactory] available in the classpath, associated by their ids.
+         * All [project health provider factories][ProjectHealthProviderFactory] available in the classpath,
+         * associated by their ids.
          */
         val ALL by lazy { PluginFactory.getAll<ProjectHealthProviderFactory, ProjectHealthProvider>() }
     }

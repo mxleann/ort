@@ -24,17 +24,19 @@ import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
-
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
+
+import java.time.Instant
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+
 import org.ossreviewtoolkit.clients.scorecard.ScorecardResult
 import org.ossreviewtoolkit.clients.scorecard.client.getResult
-
 import org.ossreviewtoolkit.model.AdvisorDetails
 import org.ossreviewtoolkit.model.AdvisorResult
 import org.ossreviewtoolkit.model.AdvisorSummary
@@ -46,11 +48,8 @@ import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProvider
 import org.ossreviewtoolkit.plugins.advisors.api.ProjectHealthProviderFactory
 import org.ossreviewtoolkit.plugins.api.OrtPlugin
 import org.ossreviewtoolkit.plugins.api.PluginDescriptor
-import org.ossreviewtoolkit.utils.ort.okHttpClient
-import org.apache.logging.log4j.kotlin.logger
 import org.ossreviewtoolkit.utils.ort.getVcsUrlParts
-import java.time.Instant
-
+import org.ossreviewtoolkit.utils.ort.okHttpClient
 
 /**
  * A [ProjectHealthProvider] implementation that obtains project health metrics from a
@@ -62,11 +61,10 @@ import java.time.Instant
     summary = "An advisor that uses a SCORECARD instance to determine project health in dependencies.",
     factory = ProjectHealthProviderFactory::class
 )
-
-class Scorecard (
+class Scorecard(
     override val descriptor: PluginDescriptor = ScorecardFactory.descriptor,
     config: ScorecardConfig
-) : ProjectHealthProvider  {
+) : ProjectHealthProvider {
 
     private val client = HttpClient(OkHttp) {
         engine {
@@ -79,15 +77,16 @@ class Scorecard (
         }
 
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                coerceInputValues = true
-            })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    coerceInputValues = true
+                }
+            )
         }
     }
 
     override val details = AdvisorDetails(descriptor.id)
-
 
     override suspend fun retrievePackageFindings(packages: Set<Package>): Map<Package, AdvisorResult> {
         val startTime = Instant.now()
@@ -107,11 +106,11 @@ class Scorecard (
             }
         }.mapValues { it.value.await() }
 
-        val projectHealthList: List<Pair<Package, List<ProjectHealth>>> = (responses
-            .map { (pkg, scorecardResult) ->
+        val projectHealthList: List<Pair<Package, List<ProjectHealth>>> =
+            responses.map { (pkg, scorecardResult) ->
                 val healthData = scorecardResult?.toProjectHealthList() ?: emptyList()
                 pkg to healthData
-            })
+            }
 
         val endTime = Instant.now()
 
@@ -120,8 +119,8 @@ class Scorecard (
         }
     }
 
-    fun ScorecardResult.toProjectHealthList(): List<ProjectHealth> {
-        return this.checks
+    fun ScorecardResult.toProjectHealthList(): List<ProjectHealth> =
+        this.checks
             .filter { metric -> metric.name != null && metric.score != null && metric.score != -1 }
             .map { metric ->
                 ProjectHealth(
@@ -135,14 +134,12 @@ class Scorecard (
                     source = descriptor.id
                 )
             }
-    }
 
-    fun determineValueCriticality (value: Int) : Criticality {
-        return when {
+    fun determineValueCriticality(value: Int): Criticality =
+        when {
             value < 3.0 -> Criticality.Critical
             value < 5.0 -> Criticality.High
             value < 8.0 -> Criticality.Medium
             else -> Criticality.Low
         }
-    }
 }

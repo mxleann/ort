@@ -17,8 +17,6 @@
  * License-Filename: LICENSE
  */
 
-
-
 plugins {
     // Apply precompiled plugins.
     id("ort-library-conventions")

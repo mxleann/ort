@@ -188,31 +188,38 @@ class VcsUtilsTest : WordSpec({
 
     "getVcsUrlParts" should {
         "match basic GitHub https URLs" {
-            getVcsUrlParts("https://github.com/mxleann/ort") shouldBe listOf("github.com", "mxleann", "ort")
+            getVcsUrlParts("https://github.com/mxleann/ort") shouldBe
+                listOf("github.com", "mxleann", "ort")
         }
 
         "match basic GitHub https URLs with '.git' extension" {
-            getVcsUrlParts("https://github.com/mxleann/ort.git") shouldBe listOf("github.com", "mxleann", "ort")
+            getVcsUrlParts("https://github.com/mxleann/ort.git") shouldBe
+                listOf("github.com", "mxleann", "ort")
         }
 
         "match basic GitHub ssh URLs" {
-            getVcsUrlParts("ssh://git@github.com/mxleann/ort") shouldBe listOf("github.com", "mxleann", "ort")
+            getVcsUrlParts("ssh://git@github.com/mxleann/ort") shouldBe
+                listOf("github.com", "mxleann", "ort")
         }
 
         "match basic GitHub ssh URLs with '.git' extension" {
-            getVcsUrlParts("ssh://git@github.com/mxleann/ort.git") shouldBe listOf("github.com", "mxleann", "ort")
+            getVcsUrlParts("ssh://git@github.com/mxleann/ort.git") shouldBe
+                listOf("github.com", "mxleann", "ort")
         }
 
         "match basic GitHub https URLs with dots in repo name" {
-            getVcsUrlParts("https://github.com/es-shims/Object.entries") shouldBe listOf("github.com", "es-shims", "Object.entries")
+            getVcsUrlParts("https://github.com/es-shims/Object.entries") shouldBe
+                listOf("github.com", "es-shims", "Object.entries")
         }
 
         "match basic GitHub https URLs with dots in repo name and '.git' extension" {
-            getVcsUrlParts("https://github.com/es-shims/Object.entries.git") shouldBe listOf("github.com", "es-shims", "Object.entries")
+            getVcsUrlParts("https://github.com/es-shims/Object.entries.git") shouldBe
+                listOf("github.com", "es-shims", "Object.entries")
         }
 
         "match more complex domains" {
-            getVcsUrlParts("https://non-existing.git.hub1337.org/a/b") shouldBe listOf("non-existing.git.hub1337.org", "a", "b")
+            getVcsUrlParts("https://non-existing.git.hub1337.org/a/b") shouldBe
+                listOf("non-existing.git.hub1337.org", "a", "b")
         }
 
         "not crash on null values" {
@@ -226,7 +233,8 @@ class VcsUtilsTest : WordSpec({
 
     "getVcsUrlOwnerAndName" should {
         "concatenate repository owner and name" {
-            getVcsUrlOwnerAndName("https://github.com/mxleann/ort.git") shouldBe "mxleann/ort"
+            getVcsUrlOwnerAndName("https://github.com/mxleann/ort.git") shouldBe
+                "mxleann/ort"
         }
     }
 })

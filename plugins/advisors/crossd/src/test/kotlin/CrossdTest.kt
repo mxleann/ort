@@ -24,6 +24,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+
 import org.ossreviewtoolkit.model.Criticality
 import org.ossreviewtoolkit.model.Identifier
 import org.ossreviewtoolkit.model.Package
@@ -36,7 +37,8 @@ class CrossdTest : StringSpec({
         apiUrl = "https://health.crossd.tech",
         thresholdCriticalityLow = 15,
         thresholdCriticalityMedium = 25,
-        thresholdCriticalityHigh = 30)
+        thresholdCriticalityHigh = 30
+    )
     val testThresholds = testConfig.getThresholds()
     val crossd = Crossd(config = testConfig)
 
@@ -78,7 +80,8 @@ class CrossdTest : StringSpec({
             sourceArtifact = RemoteArtifact.EMPTY,
             vcs = VcsInfo(
                 type = VcsType.GIT,
-                url = "https://github.com/iojawdoiwajdiowajgdwaoijwadoiwadjwadowadji/test/tree/master/packages/whatever",
+                url = "https://github.com/iojawdoiwajdiowajgdwaoijwadoiwadjwadowadji/" +
+                    "test/tree/master/packages/whatever",
                 revision = ""
             ),
             vcsProcessed = VcsInfo(

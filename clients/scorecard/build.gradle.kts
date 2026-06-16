@@ -17,8 +17,6 @@
  * License-Filename: LICENSE
  */
 
-
-
 import io.github.hfhbd.kfx.swagger.Swagger
 
 plugins {

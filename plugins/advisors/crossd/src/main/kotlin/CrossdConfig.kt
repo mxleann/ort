@@ -23,12 +23,11 @@ import org.ossreviewtoolkit.clients.crossd.CROSSD_BASE_URL
 import org.ossreviewtoolkit.model.Criticality
 import org.ossreviewtoolkit.plugins.api.OrtPluginOption
 
-
 /**
  * The configuration for the CrOSSD project health provider.
  */
 
-data class CrossdConfig (
+data class CrossdConfig(
     /** The URL of the CrOSSD server. */
     @OrtPluginOption(defaultValue = CROSSD_BASE_URL)
     val apiUrl: String,
@@ -45,11 +44,10 @@ data class CrossdConfig (
     @OrtPluginOption(defaultValue = "40")
     val thresholdCriticalityHigh: Int
 ) {
-    fun getThresholds(): Map<Criticality, Int> {
-        return linkedMapOf(
+    fun getThresholds(): Map<Criticality, Int> =
+        linkedMapOf(
             Criticality.Low to thresholdCriticalityLow,
             Criticality.Medium to thresholdCriticalityMedium,
-            Criticality.High to thresholdCriticalityHigh,
+            Criticality.High to thresholdCriticalityHigh
         )
-    }
 }

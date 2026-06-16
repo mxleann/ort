@@ -27,14 +27,17 @@ import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
+
+import java.time.Instant
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+
 import org.ossreviewtoolkit.clients.crossd.getAverageValues
 import org.ossreviewtoolkit.clients.crossd.getMetrics
-
 import org.ossreviewtoolkit.model.AdvisorDetails
 import org.ossreviewtoolkit.model.AdvisorResult
 import org.ossreviewtoolkit.model.AdvisorSummary
@@ -48,9 +51,6 @@ import org.ossreviewtoolkit.plugins.api.OrtPlugin
 import org.ossreviewtoolkit.plugins.api.PluginDescriptor
 import org.ossreviewtoolkit.utils.ort.getVcsUrlOwnerAndName
 import org.ossreviewtoolkit.utils.ort.okHttpClient
-import java.time.Instant
-import kotlin.collections.emptyList
-
 
 /**
  * A [ProjectHealthProvider] implementation that obtains project health metrics from a
@@ -62,8 +62,7 @@ import kotlin.collections.emptyList
     summary = "An advisor that uses a CrOSSD instance to determine project health in dependencies.",
     factory = ProjectHealthProviderFactory::class
 )
-
-class Crossd (
+class Crossd(
     override val descriptor: PluginDescriptor = CrossdFactory.descriptor,
     config: CrossdConfig
 ) : ProjectHealthProvider {
@@ -79,10 +78,12 @@ class Crossd (
         }
 
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                coerceInputValues = true
-            })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    coerceInputValues = true
+                }
+            )
         }
     }
 

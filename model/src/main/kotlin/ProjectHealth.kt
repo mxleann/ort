@@ -20,11 +20,13 @@
 package org.ossreviewtoolkit.model
 
 enum class Criticality {
-    Low, Medium, High, Critical
+    Low,
+    Medium,
+    High,
+    Critical
 }
 
-
-data class ProjectHealth (
+data class ProjectHealth(
     /**
      * The name of project health metric.
      */

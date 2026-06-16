@@ -118,7 +118,9 @@ class AdviseCommand(descriptor: PluginDescriptor = AdviseCommandFactory.descript
         help = "The comma-separated project health analyzers to use, any of ${ProjectHealthProviderFactory.ALL.keys}."
     ).convert { name ->
         ProjectHealthProviderFactory.ALL[name]
-            ?: throw BadParameterValue("Project health analyzer '$name' is not one of ${ProjectHealthProviderFactory.ALL.keys}.")
+            ?: throw BadParameterValue(
+                "Project health analyzer '$name' is not one of ${ProjectHealthProviderFactory.ALL.keys}."
+            )
     }.split(",").default(emptyList())
 
     private val skipExcluded by option(

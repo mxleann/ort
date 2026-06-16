@@ -24,6 +24,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.isSuccess
+
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -34,25 +35,27 @@ import kotlinx.serialization.json.put
 
 suspend fun HttpClient.getAvailableSnapshots(packageId: String): List<Double> {
     val response = post("/api/snapshots") {
-        setBody(buildJsonObject {
-            put("term", packageId)
-        })
+        setBody(
+            buildJsonObject {
+                put("term", packageId)
+            }
+        )
     }
 
-    if (!response.status.isSuccess())
+    if (!response.status.isSuccess()) {
         return emptyList()
+    }
 
     return (response.body() as JsonArray).map { it.jsonPrimitive.double }.sortedDescending()
 }
 
-suspend fun HttpClient.getLatestSnapshot(packageId: String): Double? {
-    return getAvailableSnapshots(packageId).getOrNull(0)
-}
+suspend fun HttpClient.getLatestSnapshot(packageId: String) = getAvailableSnapshots(packageId).getOrNull(0)
 
 suspend fun HttpClient.getAverageValues(): Map<String, Double> {
     val response = post("/api/metrics/avg")
-    if (!response.status.isSuccess())
+    if (!response.status.isSuccess()) {
         return emptyMap()
+    }
 
     val averages = (response.body() as JsonObject)["avg"]?.jsonObject
         ?: return emptyMap()
@@ -64,14 +67,17 @@ suspend fun HttpClient.getAverageValues(): Map<String, Double> {
 
 suspend fun HttpClient.getMetrics(packageId: String, snapshot: Double): JsonObject {
     val response = post("/api/metrics") {
-        setBody(buildJsonObject {
-            put("term", packageId)
-            put("timestamp", snapshot)
-        })
+        setBody(
+            buildJsonObject {
+                put("term", packageId)
+                put("timestamp", snapshot)
+            }
+        )
     }
 
-    if (!response.status.isSuccess())
+    if (!response.status.isSuccess()) {
         return JsonObject(emptyMap())
+    }
 
     val metrics = (response.body() as JsonObject)["metrics"]?.jsonObject
         ?: return JsonObject(emptyMap())
@@ -79,8 +85,7 @@ suspend fun HttpClient.getMetrics(packageId: String, snapshot: Double): JsonObje
     return metrics
 }
 
-suspend fun HttpClient.getMetrics(packageId: String): JsonObject {
-    return getLatestSnapshot(packageId)?.let {
+suspend fun HttpClient.getMetrics(packageId: String): JsonObject =
+    getLatestSnapshot(packageId)?.let {
         getMetrics(packageId, it)
     } ?: JsonObject(emptyMap())
-}

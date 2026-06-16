@@ -319,12 +319,10 @@ private fun mockkAdviceProvider(displayName: String = "Provider"): AdviceProvide
 
 private fun mockkProjectHealthProvider(displayName: String = "HealthProvider"): ProjectHealthProvider =
     mockk<ProjectHealthProvider>().apply {
-        every { descriptor } returns PluginDescriptor(id=displayName, displayName=displayName, summary="", options=emptyList())
+        every { descriptor } returns PluginDescriptor(displayName, displayName, "", options = emptyList())
     }
 
-private fun mockkAdvisorResult(
-    projectHealths: List<ProjectHealth> = emptyList()
-): AdvisorResult =
+private fun mockkAdvisorResult(projectHealths: List<ProjectHealth> = emptyList()): AdvisorResult =
     mockk<AdvisorResult>().apply {
         every { vulnerabilities } returns emptyList()
         every { projectHealth } returns projectHealths
