@@ -73,7 +73,7 @@ class Crossd(
         }
 
         install(DefaultRequest) {
-            url(config.apiUrl)
+            url(config.serverUrl)
             header(HttpHeaders.ContentType, ContentType.Application.Json)
         }
 

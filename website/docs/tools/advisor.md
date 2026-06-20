@@ -89,7 +89,7 @@ ort:
     advisors:
       Scorecard:
         options:
-          apiUrl: "https://api.securityscorecards.dev"
+          serverUrl: "https://api.securityscorecards.dev"
 ```
 
 To enable this provider, pass `-p Scorecard` on the command line.
@@ -105,7 +105,7 @@ ort:
     advisors:
       Crossd:
         options:
-          apiUrl: "https://health.crossd.tech"
+          serverUrl: "https://health.crossd.tech"
           thresholdCriticalityLow: 15
           thresholdCriticalityMedium: 25
           thresholdCriticalityHigh: 40

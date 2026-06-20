@@ -30,7 +30,7 @@ import org.ossreviewtoolkit.plugins.api.OrtPluginOption
 data class CrossdConfig(
     /** The URL of the CrOSSD server. */
     @OrtPluginOption(defaultValue = CROSSD_BASE_URL)
-    val apiUrl: String,
+    val serverUrl: String,
 
     /** The maximum difference between value and average (in percent) such that the criticality is considered LOW */
     @OrtPluginOption(defaultValue = "15")

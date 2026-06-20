@@ -29,5 +29,5 @@ import org.ossreviewtoolkit.plugins.api.OrtPluginOption
 data class ScorecardConfig(
     /** The URL of the SCORECARD server. */
     @OrtPluginOption(defaultValue = SCORECARD_BASE_URL)
-    val apiUrl: String
+    val serverUrl: String
 )
