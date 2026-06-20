@@ -1,3 +1,5 @@
+package org.ossreviewtoolkit.plugins.advisors.scorecard
+
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
