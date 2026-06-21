@@ -14,7 +14,7 @@ import org.ossreviewtoolkit.model.VcsInfo
 import org.ossreviewtoolkit.model.VcsType
 
 class ScorecardTest : StringSpec({
-    val scorecard = Scorecard(config = ScorecardConfig(apiUrl = "https://api.securityscorecards.dev"))
+    val scorecard = Scorecard(config = ScorecardConfig(serverUrl = "https://api.securityscorecards.dev"))
 
     "retrievePackageFindings for a valid package should return findings" {
         val pkg = Package(

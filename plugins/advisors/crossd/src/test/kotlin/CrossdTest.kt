@@ -34,7 +34,7 @@ import org.ossreviewtoolkit.model.VcsType
 
 class CrossdTest : StringSpec({
     val testConfig = CrossdConfig(
-        apiUrl = "https://health.crossd.tech",
+        serverUrl = "https://health.crossd.tech",
         thresholdCriticalityLow = 15,
         thresholdCriticalityMedium = 25,
         thresholdCriticalityHigh = 30
