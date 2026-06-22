@@ -25,7 +25,7 @@ import io.kotest.matchers.shouldBe
 import org.ossreviewtoolkit.model.Criticality
 
 class ScorecardTest : StringSpec({
-    val scorecard = Scorecard(config = ScorecardConfig(apiUrl = "https://api.securityscorecards.dev"))
+    val scorecard = Scorecard(config = ScorecardConfig(serverUrl = "https://api.securityscorecards.dev"))
 
     "determineValueCriticality should return the correct criticality" {
         scorecard.determineValueCriticality(1) shouldBe Criticality.Critical
