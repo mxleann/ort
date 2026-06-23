@@ -108,7 +108,7 @@ class Scorecard(
 
         val projectHealthList: List<Pair<Package, List<ProjectHealth>>> =
             responses.map { (pkg, scorecardResult) ->
-                val healthData = scorecardResult?.toProjectHealthList() ?: emptyList()
+                val healthData = scorecardResult?.toProjectHealthList().orEmpty()
                 pkg to healthData
             }
 
