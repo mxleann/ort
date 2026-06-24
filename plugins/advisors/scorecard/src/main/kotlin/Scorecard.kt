@@ -72,7 +72,7 @@ class Scorecard(
         }
 
         install(DefaultRequest) {
-            url(config.apiUrl)
+            url(config.serverUrl)
             header(HttpHeaders.ContentType, ContentType.Application.Json)
         }
 
@@ -108,7 +108,7 @@ class Scorecard(
 
         val projectHealthList: List<Pair<Package, List<ProjectHealth>>> =
             responses.map { (pkg, scorecardResult) ->
-                val healthData = scorecardResult?.toProjectHealthList() ?: emptyList()
+                val healthData = scorecardResult?.toProjectHealthList().orEmpty()
                 pkg to healthData
             }
 

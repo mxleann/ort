@@ -73,7 +73,7 @@ class Crossd(
         }
 
         install(DefaultRequest) {
-            url(config.apiUrl)
+            url(config.serverUrl)
             header(HttpHeaders.ContentType, ContentType.Application.Json)
         }
 
@@ -114,7 +114,7 @@ class Crossd(
                     entry.value?.let { packageId ->
                         val metrics = client.getMetrics(packageId)
                         CROSSD_METRICS.mapNotNull { it.toProjectHealth(metrics) }
-                    } ?: emptyList()
+                    }.orEmpty()
                 }
             }.mapValues { it.value.await() }
         }
