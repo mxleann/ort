@@ -29,6 +29,7 @@ import org.ossreviewtoolkit.model.OrtResult
 import org.ossreviewtoolkit.model.PackageCuration
 import org.ossreviewtoolkit.model.PackageLinkage
 import org.ossreviewtoolkit.model.Project
+import org.ossreviewtoolkit.model.ProjectHealth
 import org.ossreviewtoolkit.model.Provenance
 import org.ossreviewtoolkit.model.RemoteArtifact
 import org.ossreviewtoolkit.model.Repository
@@ -83,6 +84,7 @@ internal class EvaluatedModelMapper(private val input: ReporterInput) {
     private val ruleViolationResolutions = mutableListOf<RuleViolationResolution>()
     private val vulnerabilities = mutableListOf<EvaluatedVulnerability>()
     private val vulnerabilitiesResolutions = mutableListOf<VulnerabilityResolution>()
+    private val projectHealths = mutableListOf<EvaluatedProjectHealth>()
 
     private val curationsMatcher = FindingCurationMatcher()
     private val findingsMatcher = FindingsMatcher(PathLicenseMatcher(input.ortConfig.licenseFilePatterns))
@@ -185,6 +187,7 @@ internal class EvaluatedModelMapper(private val input: ReporterInput) {
             ruleViolations = ruleViolations,
             vulnerabilitiesResolutions = vulnerabilitiesResolutions,
             vulnerabilities = vulnerabilities,
+            projectHealths = projectHealths,
             statistics = with(input) { getStatistics(ortResult, licenseInfoResolver, ortConfig) },
             repository = input.ortResult.repository.deduplicateResolutionsAndExcludes(),
             severeIssueThreshold = input.ortConfig.severeIssueThreshold,
@@ -453,6 +456,10 @@ internal class EvaluatedModelMapper(private val input: ReporterInput) {
             addVulnerability(pkg, vulnerability)
         }
 
+        result.projectHealth.forEach { projectHealth ->
+            addProjectHealth(pkg, projectHealth)
+        }
+
         addIssues(result.summary.issues, EvaluatedIssueType.ADVISOR, pkg, null, null)
     }
 
@@ -467,6 +474,18 @@ internal class EvaluatedModelMapper(private val input: ReporterInput) {
             references = vulnerability.references,
             resolutions = resolutions
         )
+    }
+
+    private fun addProjectHealth(pkg: EvaluatedPackage,projectHealth: ProjectHealth) {
+        projectHealths += EvaluatedProjectHealth(
+            pkg = pkg, name = projectHealth.name,
+            value = projectHealth.value,
+            criticality = projectHealth.criticality,
+            reason = projectHealth.reason,
+            details = projectHealth.details,
+            documentation = projectHealth.documentation,
+            documentationLink = projectHealth.documentationLink,
+            source = projectHealth.source)
     }
 
     private fun convertScanResultsForPackage(
