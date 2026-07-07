@@ -110,7 +110,7 @@ data class EvaluatedModel(
     val ruleViolations: List<EvaluatedRuleViolation>,
     val vulnerabilitiesResolutions: List<VulnerabilityResolution>,
     val vulnerabilities: List<EvaluatedVulnerability>,
-    val projectHealths: List<EvaluatedProjectHealth>,
+    val projectHealths: List<EvaluatedProjectHealth>? = null,
     val statistics: Statistics,
     val repository: Repository,
     val severeIssueThreshold: Severity,
