@@ -51,8 +51,8 @@ class VcsUtilsTest : WordSpec({
             val packages = mapOf(
                 "git+ssh://git@github.com/logicalparadox/idris.git"
                     to "ssh://git@github.com/logicalparadox/idris.git",
-                "git@github.com:oss-review-toolkit/ort.git"
-                    to "ssh://git@github.com/oss-review-toolkit/ort.git",
+                "git@github.com:oss-review-toolkit/repo.git"
+                    to "ssh://git@github.com/oss-review-toolkit/repo.git",
                 "git@git.sr.ht:~user/repo"
                     to "ssh://git@git.sr.ht/~user/repo",
                 "ssh://user@gerrit.server.com:29418/parent/project"
@@ -188,23 +188,23 @@ class VcsUtilsTest : WordSpec({
 
     "getVcsUrlParts" should {
         "match basic GitHub https URLs" {
-            getVcsUrlParts("https://github.com/mxleann/ort") shouldBe
-                listOf("github.com", "mxleann", "ort")
+            getVcsUrlParts("https://github.com/org/repo") shouldBe
+                listOf("github.com", "org", "repo")
         }
 
         "match basic GitHub https URLs with '.git' extension" {
-            getVcsUrlParts("https://github.com/mxleann/ort.git") shouldBe
-                listOf("github.com", "mxleann", "ort")
+            getVcsUrlParts("https://github.com/org/repo.git") shouldBe
+                listOf("github.com", "org", "repo")
         }
 
         "match basic GitHub ssh URLs" {
-            getVcsUrlParts("ssh://git@github.com/mxleann/ort") shouldBe
-                listOf("github.com", "mxleann", "ort")
+            getVcsUrlParts("ssh://git@github.com/org/ort") shouldBe
+                listOf("github.com", "org", "repo")
         }
 
         "match basic GitHub ssh URLs with '.git' extension" {
-            getVcsUrlParts("ssh://git@github.com/mxleann/ort.git") shouldBe
-                listOf("github.com", "mxleann", "ort")
+            getVcsUrlParts("ssh://git@github.com/org/repo.git") shouldBe
+                listOf("github.com", "org", "repo")
         }
 
         "match basic GitHub https URLs with dots in repo name" {
@@ -233,8 +233,8 @@ class VcsUtilsTest : WordSpec({
 
     "getVcsUrlOwnerAndName" should {
         "concatenate repository owner and name" {
-            getVcsUrlOwnerAndName("https://github.com/mxleann/ort.git") shouldBe
-                "mxleann/ort"
+            getVcsUrlOwnerAndName("https://github.com/org/repo.git") shouldBe
+                "org/ort"
         }
     }
 })
