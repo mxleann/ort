@@ -476,16 +476,18 @@ internal class EvaluatedModelMapper(private val input: ReporterInput) {
         )
     }
 
-    private fun addProjectHealth(pkg: EvaluatedPackage,projectHealth: ProjectHealth) {
+    private fun addProjectHealth(pkg: EvaluatedPackage, projectHealth: ProjectHealth) {
         projectHealths += EvaluatedProjectHealth(
-            pkg = pkg, name = projectHealth.name,
+            pkg = pkg,
+            name = projectHealth.name,
             value = projectHealth.value,
             criticality = projectHealth.criticality,
             reason = projectHealth.reason,
             details = projectHealth.details,
             documentation = projectHealth.documentation,
             documentationLink = projectHealth.documentationLink,
-            source = projectHealth.source)
+            source = projectHealth.source
+        )
     }
 
     private fun convertScanResultsForPackage(
