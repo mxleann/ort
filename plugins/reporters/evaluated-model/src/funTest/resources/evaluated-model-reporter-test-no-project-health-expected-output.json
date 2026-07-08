@@ -1249,13 +1249,7 @@
     } ],
     "resolutions" : [ ]
   } ],
-  "project_healths" : [ {
-    "_id" : 0,
-    "pkg" : 2,
-    "name" : "Health Score",
-    "value" : 100.0,
-    "source" : "VulnerableCode"
-  } ],
+  "project_healths" : [ ],
   "statistics" : {
     "repository_configuration" : {
       "path_excludes" : 3,
