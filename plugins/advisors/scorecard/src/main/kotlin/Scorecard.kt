@@ -96,7 +96,7 @@ class Scorecard(
             .associateWith { getVcsUrlParts(it.vcsProcessed.url) }
 
         val responses = withContext(Dispatchers.IO.limitedParallelism(20)) {
-            packageInfo.mapValues { (pkg, repoData) ->
+            packageInfo.mapValues { (_, repoData) ->
                 async {
                     repoData?.let {
                         val (platform, org, repo) = it
