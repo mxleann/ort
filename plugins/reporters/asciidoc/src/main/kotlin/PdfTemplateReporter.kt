@@ -32,8 +32,9 @@ import org.ossreviewtoolkit.reporter.ReporterFactory
 data class PdfTemplateReporterConfig(
     /**
      * A comma-separated list of IDs of templates provided by ORT.
-     * If no template id or path is provided, the "disclosure_document" template is used, and if the ORT result contains
-     * an advisor run, the "vulnerability_report" template is used as well.
+     * If no template id or path is provided, the "disclosure_document" template is used. If the ORT result contains
+     * an advisor run, the "vulnerability_report" and / or "project_health_report" templates are used as well
+     * depending on the available data.
      */
     @OrtPluginOption(aliases = ["template.id"])
     val templateIds: List<String>?,
@@ -62,8 +63,9 @@ data class PdfTemplateReporterConfig(
  * templates and [AsciiDoc](https://asciidoc.org/) with [AsciidoctorJ](https://github.com/asciidoctor/asciidoctorj) as
  * Java interface and [AsciidoctorJ PDF](https://github.com/asciidoctor/asciidoctorj-pdf) as PDF file generator.
  * For each Freemarker template provided using the options described below, a separate intermediate file is created
- * that can be processed by AsciidoctorJ. If no options are provided, the "disclosure_document" template is used, and if
- * security vulnerability information is available also the "vulnerability_report" template.
+ * that can be processed by AsciidoctorJ. If no options are provided, the "disclosure_document" template is used. If
+ * security vulnerability information is available also the "vulnerability_report" template is used. If project health
+ * information is available the "project_health_report" template is used.
  *
  * After the intermediate files are generated, they are processed by AsciidoctorJ PDF.
  * A PDF theme can be handed over to AsciidoctorJ PDF in which properties like fonts or images displayed in the PDF can

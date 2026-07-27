@@ -32,10 +32,12 @@ import org.apache.logging.log4j.kotlin.logger
 import org.ossreviewtoolkit.model.AdvisorResult
 import org.ossreviewtoolkit.model.AdvisorResultFilter
 import org.ossreviewtoolkit.model.AdvisorRun
+import org.ossreviewtoolkit.model.Criticality
 import org.ossreviewtoolkit.model.Identifier
 import org.ossreviewtoolkit.model.Issue
 import org.ossreviewtoolkit.model.OrtResult
 import org.ossreviewtoolkit.model.Package
+import org.ossreviewtoolkit.model.ProjectHealth
 import org.ossreviewtoolkit.model.RuleViolation
 import org.ossreviewtoolkit.model.Severity
 import org.ossreviewtoolkit.model.SnippetFinding
@@ -376,6 +378,31 @@ class FreemarkerTemplateProcessor(
          */
         fun advisorResultsWithVulnerabilities(): Map<Identifier, List<AdvisorResult>> =
             input.filteredAdvisorResults(AdvisorRun.RESULTS_WITH_VULNERABILITIES)
+
+        /**
+         * Return the subset of the available advisor results that contain project health metrics.
+         */
+        fun advisorResultsWithProjectHealth(): Map<Identifier, List<AdvisorResult>> =
+            input.filteredAdvisorResults(AdvisorRun.RESULTS_WITH_PROJECT_HEALTH)
+
+        /**
+         * Return a filtered list of [ProjectHealth] metrics. Only metrics with criticality equal to or greater
+         * than the given [threshold] are included. Metrics without a criticality are filtered out.
+         * The default [threshold] can be configured via the 'projectHealth.minCriticality' label in the ORT result.
+         */
+        @JvmOverloads
+        @Suppress("unused") // This function in used in the templates.
+        fun filterProjectHealth(
+            metrics: List<ProjectHealth>,
+            threshold: String = input.ortResult.labels["projectHealth.minCriticality"]
+                ?: "High"
+        ): List<ProjectHealth> {
+            val minCriticality = runCatching {
+                Criticality.valueOf(threshold) }.getOrNull() ?: Criticality.High
+            return metrics.filter { metric ->
+                val crit = metric.criticality
+                crit != null && crit >= minCriticality }
+        }
 
         /**
          * Return the package from the current [OrtResult] with the given [id] or the empty package if the ID cannot be

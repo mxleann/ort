@@ -84,6 +84,11 @@ data class AdvisorRun(
         val RESULTS_WITH_VULNERABILITIES: AdvisorResultFilter = { it.vulnerabilities.isNotEmpty() }
 
         /**
+         * A filter for [AdvisorResult]s that matches only results that contain project health metrics.
+         */
+        val RESULTS_WITH_PROJECT_HEALTH: AdvisorResultFilter = { it.projectHealth.isNotEmpty() }
+
+        /**
          * Return a filter for [AdvisorResult]s that contain issues. Match only results with an issue whose severity
          * is greater or equal than [minSeverity].
          */

@@ -36,8 +36,9 @@ import org.ossreviewtoolkit.utils.ort.createOrtTempDir
 data class AsciiDocTemplateReporterConfig(
     /**
      * A comma-separated list of IDs of templates provided by ORT.
-     * If no template id or path is provided, the "disclosure_document" template is used, and if the ORT result contains
-     * an advisor run, the "vulnerability_report" template is used as well.
+     * If no template id or path is provided, the "disclosure_document" template is used. If the ORT result contains
+     * an advisor run, the "vulnerability_report" and / or "project_health_report" templates are used as well
+     * depending on the available data.
      */
     @OrtPluginOption(aliases = ["template.id"])
     val templateIds: List<String>?,
@@ -66,6 +67,7 @@ abstract class AsciiDocTemplateReporter(private val config: AsciiDocTemplateRepo
 
         private const val DISCLOSURE_TEMPLATE_ID = "disclosure_document"
         private const val VULNERABILITY_TEMPLATE_ID = "vulnerability_report"
+        private const val PROJECT_HEALTH_TEMPLATE_ID = "project_health_report"
 
         internal val ASCIIDOCTOR by lazy { Asciidoctor.Factory.create() }
     }
@@ -99,14 +101,23 @@ abstract class AsciiDocTemplateReporter(private val config: AsciiDocTemplateRepo
      * Generate the AsciiDoc files from the templates defined in [config] in [outputDir].
      */
     private fun generateAsciiDocFiles(input: ReporterInput, outputDir: File): List<Result<File>> {
+        val hasVulnerabilities = input.ortResult.getAdvisorResults().values
+            .flatten().any { it.vulnerabilities.isNotEmpty() }
+        val hasProjectHealth = input.ortResult.getAdvisorResults().values
+            .flatten().any { it.projectHealth.isNotEmpty() }
+
         val actualConfig = config.takeIf {
             it.templateIds?.isNotEmpty() == true || it.templatePaths?.isNotEmpty() == true
         } ?: AsciiDocTemplateReporterConfig(
             templateIds = buildList {
                 add(DISCLOSURE_TEMPLATE_ID)
 
-                if (input.ortResult.getAdvisorResults().isNotEmpty()) {
+                if (hasVulnerabilities) {
                     add(VULNERABILITY_TEMPLATE_ID)
+                }
+
+                if (hasProjectHealth) {
+                    add(PROJECT_HEALTH_TEMPLATE_ID)
                 }
             },
             templatePaths = null
