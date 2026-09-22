@@ -29,6 +29,7 @@ import org.ossreviewtoolkit.model.OrtResult
 import org.ossreviewtoolkit.model.PackageCuration
 import org.ossreviewtoolkit.model.PackageLinkage
 import org.ossreviewtoolkit.model.Project
+import org.ossreviewtoolkit.model.HealthMetric
 import org.ossreviewtoolkit.model.Provenance
 import org.ossreviewtoolkit.model.RemoteArtifact
 import org.ossreviewtoolkit.model.Repository
@@ -90,6 +91,7 @@ internal class EvaluatedModelMapper(private val input: ReporterInput) {
     private val ruleViolationResolutions = mutableListOf<RuleViolationResolution>()
     private val vulnerabilities = mutableListOf<EvaluatedVulnerability>()
     private val vulnerabilitiesResolutions = mutableListOf<VulnerabilityResolution>()
+    private val healthMetrics = mutableListOf<EvaluatedHealthMetric>()
 
     private val curationsMatcher = FindingCurationMatcher()
     private val findingsMatcher = FindingsMatcher(PathLicenseMatcher(input.ortConfig.licenseFilePatterns))
@@ -193,6 +195,7 @@ internal class EvaluatedModelMapper(private val input: ReporterInput) {
             ruleViolations = ruleViolations,
             vulnerabilitiesResolutions = vulnerabilitiesResolutions,
             vulnerabilities = vulnerabilities,
+            healthMetrics = healthMetrics,
             statistics = with(input) { getStatistics(ortResult, licenseInfoResolver, ortConfig) },
             repository = input.ortResult.repository.deduplicateResolutionsAndExcludes(),
             severeIssueThreshold = input.ortConfig.severeIssueThreshold,
@@ -464,6 +467,10 @@ internal class EvaluatedModelMapper(private val input: ReporterInput) {
             addVulnerability(pkg, vulnerability)
         }
 
+        result.healthMetrics.forEach { healthMetric ->
+            addHealthMetric(pkg, result.advisor.name, healthMetric)
+        }
+
         addIssues(result.summary.issues, EvaluatedIssueType.ADVISOR, pkg, null, null)
     }
 
@@ -478,6 +485,18 @@ internal class EvaluatedModelMapper(private val input: ReporterInput) {
             references = vulnerability.references,
             resolutions = resolutions
         )
+    }
+
+    private fun addHealthMetric(pkg: EvaluatedPackage, source: String, healthMetric: HealthMetric) {
+        healthMetrics += EvaluatedHealthMetric(
+            pkg = pkg, name = healthMetric.name,
+            value = healthMetric.value,
+            criticality = healthMetric.criticality,
+            reason = healthMetric.reason,
+            details = healthMetric.details,
+            documentation = healthMetric.documentation,
+            documentationLink = healthMetric.documentationLink,
+            source = source)
     }
 
     private fun convertScanResultsForPackage(

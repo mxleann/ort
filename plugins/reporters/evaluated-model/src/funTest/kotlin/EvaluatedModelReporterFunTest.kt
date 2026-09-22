@@ -40,8 +40,16 @@ class EvaluatedModelReporterFunTest : WordSpec({
         ).single().getOrThrow().readText().normalizeLineBreaks()
 
     val ortResult by lazy { readOrtResult("/reporter-test-input.yml") }
+    val ortResultNoProjectHealth by lazy { readOrtResult("/reporter-test-input-no-project-health.yml") }
 
     "EvaluatedModelReporter" should {
+        "create the expected JSON output when there is no project health data" {
+            val expectedResult = readResource("/evaluated-model-reporter-test-no-project-health-expected-output.json")
+
+            val result = EvaluatedModelReporterFactory.create().generateReport(ortResultNoProjectHealth)
+            result shouldBe expectedResult
+        }
+
         "create the expected JSON output" {
             val expectedResult = readResource("/evaluated-model-reporter-test-expected-output.json")
 

@@ -25,19 +25,6 @@
     "reason" : "TEST_DEPENDENCY_OF",
     "comment" : "The scope only contains test dependencies."
   } ],
-  "license_choices" : {
-    "repository_license_choices" : [ {
-      "given" : "GPL-2.0-only OR MIT",
-      "choice" : "MIT"
-    } ],
-    "package_license_choices" : [ {
-      "package_id" : "Maven:com.h2database:h2:1.4.200",
-      "license_choices" : [ {
-        "given" : "MPL-2.0 OR EPL-1.0",
-        "choice" : "MPL-2.0"
-      } ]
-    } ]
-  },
   "license_finding_curations" : [ {
     "_id" : 0,
     "path" : "project/file2.java",
@@ -777,7 +764,6 @@
         "algorithm" : "SHA-1"
       }
     },
-    "published_at" : "2014-12-04T16:17:28Z",
     "vcs" : {
       "type" : "",
       "url" : "",
@@ -810,10 +796,6 @@
     },
     "concluded_license" : "GPL-2.0-only OR MIT",
     "effective_license" : "MIT",
-    "applied_license_choices" : [ {
-      "given" : "GPL-2.0-only OR MIT",
-      "choice" : "MIT"
-    } ],
     "binary_artifact" : {
       "url" : "",
       "hash" : {
@@ -863,10 +845,6 @@
     },
     "concluded_license" : "MPL-2.0 OR EPL-1.0",
     "effective_license" : "MPL-2.0",
-    "applied_license_choices" : [ {
-      "given" : "MPL-2.0 OR EPL-1.0",
-      "choice" : "MPL-2.0"
-    } ],
     "description" : "H2 Database Engine",
     "homepage_url" : "https://h2database.com",
     "binary_artifact" : {
@@ -1271,29 +1249,13 @@
     } ],
     "resolutions" : [ ]
   } ],
-  "project_healths" : [ {
-    "_id" : 0,
-    "pkg" : 2,
-    "name" : "Health Score",
-    "value" : 100.0,
-    "source" : "VulnerableCode"
-  } ],
+  "project_healths" : [ ],
   "statistics" : {
     "repository_configuration" : {
       "path_excludes" : 3,
       "scope_excludes" : 1,
       "license_choices" : 2,
       "license_finding_curations" : 0,
-      "package_configurations" : 0,
-      "package_curations" : 0,
-      "issue_resolutions" : 2,
-      "rule_violation_resolutions" : 1,
-      "vulnerability_resolutions" : 0
-    },
-    "resolved_configuration" : {
-      "license_choices" : 2,
-      "package_configurations" : 1,
-      "package_curations" : 3,
       "issue_resolutions" : 2,
       "rule_violation_resolutions" : 1,
       "vulnerability_resolutions" : 0

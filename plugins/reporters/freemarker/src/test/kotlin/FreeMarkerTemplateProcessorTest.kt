@@ -38,6 +38,8 @@ import org.ossreviewtoolkit.model.AdvisorSummary
 import org.ossreviewtoolkit.model.AnalyzerResult
 import org.ossreviewtoolkit.model.AnalyzerRun
 import org.ossreviewtoolkit.model.CopyrightFinding
+import org.ossreviewtoolkit.model.Criticality
+import org.ossreviewtoolkit.model.HealthMetric
 import org.ossreviewtoolkit.model.Identifier
 import org.ossreviewtoolkit.model.Issue
 import org.ossreviewtoolkit.model.LicenseFinding
@@ -217,7 +219,8 @@ private fun testProjects() = ORT_RESULT.getProjects().toList()
 private fun advisorResult(
     details: AdvisorDetails = ADVISOR_DETAILS,
     issues: List<Issue> = emptyList(),
-    vulnerabilities: List<Vulnerability> = emptyList()
+    vulnerabilities: List<Vulnerability> = emptyList(),
+    projectHealth: List<HealthMetric> = emptyList()
 ): AdvisorResult =
     AdvisorResult(
         advisor = details,
@@ -226,7 +229,8 @@ private fun advisorResult(
             endTime = Instant.now(),
             issues = issues
         ),
-        vulnerabilities = vulnerabilities
+        vulnerabilities = vulnerabilities,
+        healthMetrics = projectHealth
     )
 
 class FreeMarkerTemplateProcessorTest : WordSpec({
@@ -478,6 +482,84 @@ class FreeMarkerTemplateProcessorTest : WordSpec({
             val results = helper.advisorResultsWithVulnerabilities()
 
             results should beEmpty()
+        }
+    }
+
+    "advisorResultsWithHealthMetric" should {
+        "return the correct results" {
+            val resultWithHealth1 = advisorResult(projectHealth = listOf(mockk()))
+            val resultWithHealth2 = advisorResult(
+                details = AdvisorDetails("otherHealthProvider"),
+                projectHealth = listOf(mockk())
+            )
+            val otherResult = advisorResult()
+
+            val advisorRun = advisorRunOf(
+                idRootProject to emptyList(),
+                idNestedProject to listOf(resultWithHealth1, otherResult),
+                idSubProject to listOf(resultWithHealth2)
+            )
+            val ortResult = ORT_RESULT.copy(advisor = advisorRun)
+            val input = ReporterInput(ortResult)
+
+            val helper = FreemarkerTemplateProcessor.TemplateHelper(input)
+
+            val results = helper.advisorResultsWithHealthMetrics()
+
+            results.keys should containExactlyInAnyOrder(idNestedProject, idSubProject)
+            results.getValue(idNestedProject) should containExactly(resultWithHealth1)
+            results.getValue(idSubProject) should containExactly(resultWithHealth2)
+        }
+
+        "return an empty map if there is no advisor result" {
+            val input = ReporterInput(ORT_RESULT)
+            val helper = FreemarkerTemplateProcessor.TemplateHelper(input)
+
+            val results = helper.advisorResultsWithHealthMetrics()
+
+            results should beEmpty()
+        }
+    }
+
+    "filterHealthMetrics" should {
+        "filter out metrics below the threshold and metrics without criticality" {
+            val healthLow = mockk<HealthMetric> { every { criticality } returns Criticality.LOW }
+            val healthMedium = mockk<HealthMetric> { every { criticality } returns Criticality.MEDIUM }
+            val healthHigh = mockk<HealthMetric> { every { criticality } returns Criticality.HIGH }
+            val healthCritical = mockk<HealthMetric> { every { criticality } returns Criticality.CRITICAL }
+            val healthNull = mockk<HealthMetric> { every { criticality } returns null }
+
+            val metrics = listOf(healthLow, healthMedium, healthHigh, healthCritical, healthNull)
+
+            // Set up a mock input without any custom labels -> should default to High
+            val input = mockk<ReporterInput> {
+                every { ortResult.labels } returns emptyMap()
+            }
+
+            val helper = FreemarkerTemplateProcessor.TemplateHelper(input)
+
+            val result = helper.filterHealthMetrics(metrics)
+
+            result shouldBe listOf(healthHigh, healthCritical)
+        }
+
+        "respect the threshold configured via labels" {
+            val healthMedium = mockk<HealthMetric> { every { criticality } returns Criticality.MEDIUM }
+            val healthHigh = mockk<HealthMetric> { every { criticality } returns Criticality.HIGH }
+            val healthNull = mockk<HealthMetric> { every { criticality } returns null }
+
+            val metrics = listOf(healthMedium, healthHigh, healthNull)
+
+            // Set up a mock input WITH a custom label minCriticality = Medium
+            val input = mockk<ReporterInput> {
+                every { ortResult.labels } returns mapOf("projectHealth.minCriticality" to "Medium")
+            }
+
+            val helper = FreemarkerTemplateProcessor.TemplateHelper(input)
+
+            val result = helper.filterHealthMetrics(metrics)
+
+            result shouldBe listOf(healthMedium, healthHigh)
         }
     }
 
